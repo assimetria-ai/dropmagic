@@ -6,7 +6,7 @@ import { Button } from '../../../components/@system/ui/button'
 import { Header } from '../../../components/@system/Header/Header'
 import { info } from '../../../../config/@system/info'
 
-const EFFECTIVE_DATE = 'January 1, 2025'
+const EFFECTIVE_DATE = 'February 27, 2026'
 
 const SECTIONS = [
   {
@@ -17,7 +17,7 @@ const SECTIONS = [
   {
     id: 'description',
     title: '2. Description of Service',
-    content: `${info.name} provides [describe your service here]. We reserve the right to modify, suspend, or discontinue the Service at any time with or without notice. We shall not be liable to you or any third party for any modification, suspension, or discontinuation of the Service.`,
+    content: `${info.name} provides a viral product launch platform that enables users to create countdown-driven product drops, collect email sign-ups, and engage audiences through referral mechanics. The platform allows product creators to build waitlists, share unique referral links, and track engagement analytics. We reserve the right to modify, suspend, or discontinue the Service at any time with or without notice. We shall not be liable to you or any third party for any modification, suspension, or discontinuation of the Service.`,
   },
   {
     id: 'accounts',

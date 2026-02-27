@@ -6,11 +6,11 @@ import { Header } from '../../../components/@system/Header/Header'
 import { info } from '../../../../config/@system/info'
 
 // @custom — set the effective date when deploying
-const EFFECTIVE_DATE = 'January 1, 2025'
+const EFFECTIVE_DATE = 'February 27, 2026'
 
 // @custom — set your company legal name and address
 const COMPANY_NAME = info.name
-const COMPANY_ADDRESS = 'Your Company Address, City, Country'
+const COMPANY_ADDRESS = 'Assimetria Lda, Portugal, EU'
 const CONTACT_EMAIL = info.supportEmail
 
 interface SectionProps {
