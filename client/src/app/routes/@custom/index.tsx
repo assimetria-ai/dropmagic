@@ -5,11 +5,14 @@ import { BrandSettingsPage } from '../../pages/app/@custom/BrandSettingsPage'
 import { ChatbasePage } from '../../pages/app/@custom/ChatbasePage'
 import { EmailTrackingPage } from '../../pages/app/@custom/EmailTrackingPage'
 import { EmailPreviewPage } from '../../pages/app/@custom/EmailPreviewPage'
+import PublicDropPage from '../../pages/@custom/PublicDropPage'
 import { PrivateRoute } from '@/app/components/@system/PrivateRoute/PrivateRoute'
 
 // @custom — add your product-specific routes here.
 // Wrap with <PrivateRoute> for authenticated pages.
 export const customRoutes: React.ReactElement[] = [
+  // Public drop page (viral signup landing page - NO AUTH REQUIRED)
+  <Route key="public-drop" path="/drop/:slug" element={<PublicDropPage />} />,
   <Route
     key="error-tracking"
     path="/app/errors"

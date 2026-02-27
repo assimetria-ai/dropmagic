@@ -1,7 +1,10 @@
-// @custom — register your scheduled tasks here
-// Each task should export a { start } function
+// @custom — export your task classes here
+// Then register them in init.js
+//
 // Example:
-// const myTask = require('./myTask')
-// module.exports = [myTask]
+//   const MyTask = require('./myTask')
+//   module.exports = { MyTask }
 
-module.exports = []
+const TestTask = require('./TestTask')
+
+module.exports = { TestTask }

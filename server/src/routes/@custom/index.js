@@ -10,5 +10,6 @@ router.use(require('../../api/@custom/brands'))
 router.use(require('../../api/@custom/chatbase'))
 router.use(require('../../api/@custom/email-logs'))
 router.use(require('../../api/@custom/storage'))
+router.use(require('../../api/@custom/blog'))
 
 module.exports = router
