@@ -5,7 +5,7 @@ import { BrandSettingsPage } from '../../pages/app/@custom/BrandSettingsPage'
 import { ChatbasePage } from '../../pages/app/@custom/ChatbasePage'
 import { EmailTrackingPage } from '../../pages/app/@custom/EmailTrackingPage'
 import { EmailPreviewPage } from '../../pages/app/@custom/EmailPreviewPage'
-import PublicDropPage from '../../pages/@custom/PublicDropPage'
+import { PublicDropPage } from '../../pages/public/@custom/PublicDropPage'
 import { PrivateRoute } from '@/app/components/@system/PrivateRoute/PrivateRoute'
 
 // @custom — add your product-specific routes here.
