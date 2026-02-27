@@ -18,7 +18,7 @@
 
 # ── Shared base ───────────────────────────────────────────────────────────────
 FROM node:20-alpine AS base
-ARG CACHEBUST=1
+ARG CACHEBUST=20260227-legal
 RUN apk add --no-cache tini postgresql-client
 
 # ── Stage 1: server production dependencies ───────────────────────────────────
