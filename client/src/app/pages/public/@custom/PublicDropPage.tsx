@@ -226,7 +226,7 @@ export function PublicDropPage() {
       try {
         setLoading(true)
         setError(null)
-        const response = await api.get<{ drop: Drop }>(`/drops/${slug}`)
+        const response = await api.get<{ drop: Drop }>(`/drops/${slug}/public`)
         setDrop(response.drop)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load drop')

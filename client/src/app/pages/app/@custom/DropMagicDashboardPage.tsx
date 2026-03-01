@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Rocket,
   Clock,
@@ -8,6 +9,8 @@ import {
   TrendingUp,
   Users,
   Target,
+  Pencil,
+  ExternalLink,
 } from 'lucide-react'
 import { Header } from '../../../components/@system/Header/Header'
 import { PageLayout } from '../../../components/@system/layout/PageLayout'
@@ -112,7 +115,7 @@ function StatusBadge({ status }: { status: DropStatus }) {
   )
 }
 
-function DropCard({ drop }: { drop: Drop }) {
+function DropCard({ drop, onEdit }: { drop: Drop; onEdit: (id: number) => void }) {
   return (
     <div className="flex flex-col rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
       {/* Product image placeholder */}
@@ -143,6 +146,27 @@ function DropCard({ drop }: { drop: Drop }) {
             {drop.shares.toLocaleString()} shares
           </span>
         </div>
+
+        <div className="flex gap-2 pt-1">
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1 gap-1.5 text-xs"
+            onClick={() => onEdit(drop.id)}
+          >
+            <Pencil className="h-3.5 w-3.5" />
+            Edit
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="flex-1 gap-1.5 text-xs"
+            onClick={() => window.open(`/drop/${drop.id}`, '_blank')}
+          >
+            <ExternalLink className="h-3.5 w-3.5" />
+            View
+          </Button>
+        </div>
       </div>
     </div>
   )
@@ -151,6 +175,7 @@ function DropCard({ drop }: { drop: Drop }) {
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export function DropMagicDashboardPage() {
+  const navigate = useNavigate()
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [drops, setDrops] = useState<Drop[]>([])
   const [signups, setSignups] = useState<Signup[]>([])
@@ -204,7 +229,7 @@ export function DropMagicDashboardPage() {
               Manage your drops, track signups, and watch the hype grow.
             </p>
           </div>
-          <Button className="gap-2">
+          <Button className="gap-2" onClick={() => navigate('/app/drops/new')}>
             <Plus className="h-4 w-4" />
             Create Drop
           </Button>
@@ -266,7 +291,7 @@ export function DropMagicDashboardPage() {
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {drops.map((drop) => (
-                <DropCard key={drop.id} drop={drop} />
+                <DropCard key={drop.id} drop={drop} onEdit={(id) => navigate(`/app/drops/${id}`)} />
               ))}
             </div>
           )}
