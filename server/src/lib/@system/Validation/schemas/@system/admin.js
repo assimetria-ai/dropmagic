@@ -1,9 +1,10 @@
 const { z } = require('zod')
 
 const ListUsersQuery = z.object({
-  search: z.string().optional(),
-  page: z.coerce.number().int().positive().default(1),
-  limit: z.coerce.number().int().min(1).max(200).default(50),
+  search: z.string().max(100).optional(),
+  page: z.coerce.number().int().min(1).max(10000).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+  status: z.enum(['active', 'suspended', 'pending']).optional(),
 })
 
 const UserIdParams = z.object({
@@ -15,8 +16,8 @@ const UpdateUserRoleBody = z.object({
 })
 
 const ListSubscriptionsQuery = z.object({
-  page: z.coerce.number().int().positive().default(1),
-  limit: z.coerce.number().int().min(1).max(200).default(50),
+  page: z.coerce.number().int().min(1).max(10000).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
   status: z.enum(['active', 'canceled', 'past_due', 'trialing', 'incomplete', 'incomplete_expired', 'unpaid']).optional(),
 })
 

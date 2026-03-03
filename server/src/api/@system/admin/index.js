@@ -11,24 +11,36 @@ const { ListUsersQuery, UserIdParams, UpdateUserRoleBody, ListSubscriptionsQuery
 
 const guard = [authenticate, requireAdmin]
 
+// Statement timeout for admin list queries (5 seconds) — prevents slow queries from blocking the DB pool
+const ADMIN_QUERY_TIMEOUT = "SET LOCAL statement_timeout = '5s'"
+
 // ── Users ─────────────────────────────────────────────────────────────────
 
-// GET /api/admin/users — paginated user list with optional search
+// GET /api/admin/users — paginated user list with optional search and status filter
 router.get('/admin/users', ...guard, validate({ query: ListUsersQuery }), async (req, res, next) => {
   try {
-    const { search, page, limit } = req.query
-    let users
-    if (search && search.length >= 2) {
-      users = await UserRepo.search(search, { limit: Number(limit) })
-    } else {
-      users = await db.any(
+    const { search, page, limit, status } = req.query
+    const users = await db.task(async t => {
+      await t.none(ADMIN_QUERY_TIMEOUT)
+      if (search && search.length >= 2) {
+        return UserRepo.search(search, { limit: Number(limit) })
+      }
+      const conditions = []
+      const params = []
+      if (status) {
+        conditions.push(`status = $${params.length + 1}`)
+        params.push(status)
+      }
+      const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''
+      return t.any(
         `SELECT id, email, name, role, created_at
          FROM users
+         ${where}
          ORDER BY created_at DESC
-         LIMIT $1 OFFSET $2`,
-        [Number(limit), (Number(page) - 1) * Number(limit)]
+         LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
+        [...params, Number(limit), (Number(page) - 1) * Number(limit)]
       )
-    }
+    })
     res.json({ users })
   } catch (err) {
     next(err)
@@ -38,12 +50,15 @@ router.get('/admin/users', ...guard, validate({ query: ListUsersQuery }), async 
 // GET /api/admin/users/stats — registration counts and totals
 router.get('/admin/users/stats', ...guard, async (req, res, next) => {
   try {
-    const [total, todayRow, weekRow, monthRow] = await Promise.all([
-      db.one('SELECT COUNT(*) AS count FROM users'),
-      db.one("SELECT COUNT(*) AS count FROM users WHERE created_at >= now() - interval '1 day'"),
-      db.one("SELECT COUNT(*) AS count FROM users WHERE created_at >= now() - interval '7 days'"),
-      db.one("SELECT COUNT(*) AS count FROM users WHERE created_at >= now() - interval '30 days'"),
-    ])
+    const [total, todayRow, weekRow, monthRow] = await db.task(async t => {
+      await t.none(ADMIN_QUERY_TIMEOUT)
+      return Promise.all([
+        t.one('SELECT COUNT(*) AS count FROM users'),
+        t.one("SELECT COUNT(*) AS count FROM users WHERE created_at >= now() - interval '1 day'"),
+        t.one("SELECT COUNT(*) AS count FROM users WHERE created_at >= now() - interval '7 days'"),
+        t.one("SELECT COUNT(*) AS count FROM users WHERE created_at >= now() - interval '30 days'"),
+      ])
+    })
     res.json({
       total: Number(total.count),
       today: Number(todayRow.count),
@@ -93,15 +108,18 @@ router.get('/admin/subscriptions', ...guard, validate({ query: ListSubscriptions
       ? [Number(limit), (Number(page) - 1) * Number(limit), status]
       : [Number(limit), (Number(page) - 1) * Number(limit)]
 
-    const subscriptions = await db.any(
-      `SELECT s.*, u.email, u.name
-       FROM subscriptions s
-       JOIN users u ON u.id = s.user_id
-       ${conditions}
-       ORDER BY s.created_at DESC
-       LIMIT $1 OFFSET $2`,
-      params
-    )
+    const subscriptions = await db.task(async t => {
+      await t.none(ADMIN_QUERY_TIMEOUT)
+      return t.any(
+        `SELECT s.*, u.email, u.name
+         FROM subscriptions s
+         JOIN users u ON u.id = s.user_id
+         ${conditions}
+         ORDER BY s.created_at DESC
+         LIMIT $1 OFFSET $2`,
+        params
+      )
+    })
     res.json({ subscriptions })
   } catch (err) {
     next(err)
@@ -111,9 +129,10 @@ router.get('/admin/subscriptions', ...guard, validate({ query: ListSubscriptions
 // GET /api/admin/subscriptions/stats — counts by status
 router.get('/admin/subscriptions/stats', ...guard, async (req, res, next) => {
   try {
-    const rows = await db.any(
-      'SELECT status, COUNT(*) AS count FROM subscriptions GROUP BY status'
-    )
+    const rows = await db.task(async t => {
+      await t.none(ADMIN_QUERY_TIMEOUT)
+      return t.any('SELECT status, COUNT(*) AS count FROM subscriptions GROUP BY status')
+    })
     const stats = Object.fromEntries(rows.map((r) => [r.status, Number(r.count)]))
     res.json({ stats })
   } catch (err) {
