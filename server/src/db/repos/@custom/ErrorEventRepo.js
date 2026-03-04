@@ -95,7 +95,7 @@ const ErrorEventRepo = {
     const values = []
     if (environment) { conditions.push('environment = $1'); values.push(environment) }
     const where = `WHERE ${conditions.join(' AND ')}`
-    return db.one(
+    const row = await db.one(
       `SELECT
          COUNT(*) FILTER (WHERE status = 'unresolved') AS unresolved,
          COUNT(*) FILTER (WHERE status = 'resolved') AS resolved,
@@ -108,6 +108,18 @@ const ErrorEventRepo = {
        FROM error_events ${where}`,
       values,
     )
+    
+    // Parse all counts to integers (Postgres returns COUNT(*) as strings)
+    return {
+      unresolved: parseInt(row.unresolved, 10),
+      resolved: parseInt(row.resolved, 10),
+      ignored: parseInt(row.ignored, 10),
+      total: parseInt(row.total, 10),
+      fatal: parseInt(row.fatal, 10),
+      errors: parseInt(row.errors, 10),
+      warnings: parseInt(row.warnings, 10),
+      last_24h: parseInt(row.last_24h, 10),
+    }
   },
 
   // ── Soft delete ──────────────────────────────────────────────────────────────

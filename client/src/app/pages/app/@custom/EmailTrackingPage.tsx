@@ -40,21 +40,21 @@ interface EmailLog {
 }
 
 interface EmailStats {
-  total: string
-  sent: string
-  delivered: string
-  bounced: string
-  failed: string
-  last_24h: string
-  last_7d: string
-  unique_recipients: string
+  total: number
+  sent: number
+  delivered: number
+  bounced: number
+  failed: number
+  last_24h: number
+  last_7d: number
+  unique_recipients: number
 }
 
 interface TemplateBreakdown {
   template: string
-  total: string
-  failed: string
-  bounced: string
+  total: number
+  failed: number
+  bounced: number
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -187,11 +187,11 @@ function TemplateBreakdownPanel({ templates }: { templates: TemplateBreakdown[] 
         {templates.map((t) => (
           <div key={t.template} className="flex items-center gap-3 px-4 py-2.5 text-sm">
             <span className="flex-1 font-medium text-foreground">{t.template}</span>
-            <span className="text-muted-foreground">{parseInt(t.total).toLocaleString()} sent</span>
-            {parseInt(t.failed) > 0 && (
+            <span className="text-muted-foreground">{t.total.toLocaleString()} sent</span>
+            {t.failed > 0 && (
               <span className="text-red-600 text-xs">{t.failed} failed</span>
             )}
-            {parseInt(t.bounced) > 0 && (
+            {t.bounced > 0 && (
               <span className="text-yellow-600 text-xs">{t.bounced} bounced</span>
             )}
           </div>
@@ -298,10 +298,10 @@ export function EmailTrackingPage() {
         {/* Stats */}
         {stats && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-            <StatCard label="Total sent" value={parseInt(stats.total).toLocaleString()} icon={<Mail className="h-4 w-4" />} />
-            <StatCard label="Last 24h" value={parseInt(stats.last_24h).toLocaleString()} icon={<Clock className="h-4 w-4" />} />
-            <StatCard label="Failed" value={parseInt(stats.failed).toLocaleString()} icon={<MailX className="h-4 w-4" />} />
-            <StatCard label="Unique recipients" value={parseInt(stats.unique_recipients).toLocaleString()} icon={<Users className="h-4 w-4" />} />
+            <StatCard label="Total sent" value={stats.total.toLocaleString()} icon={<Mail className="h-4 w-4" />} />
+            <StatCard label="Last 24h" value={stats.last_24h.toLocaleString()} icon={<Clock className="h-4 w-4" />} />
+            <StatCard label="Failed" value={stats.failed.toLocaleString()} icon={<MailX className="h-4 w-4" />} />
+            <StatCard label="Unique recipients" value={stats.unique_recipients.toLocaleString()} icon={<Users className="h-4 w-4" />} />
           </div>
         )}
 

@@ -42,14 +42,14 @@ interface ErrorEvent {
 }
 
 interface Stats {
-  total: string
-  unresolved: string
-  resolved: string
-  ignored: string
-  fatal: string
-  errors: string
-  warnings: string
-  last_24h: string
+  total: number
+  unresolved: number
+  resolved: number
+  ignored: number
+  fatal: number
+  errors: number
+  warnings: number
+  last_24h: number
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────

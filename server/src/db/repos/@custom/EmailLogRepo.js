@@ -82,7 +82,7 @@ const EmailLogRepo = {
   },
 
   async getStats() {
-    return db.one(
+    const row = await db.one(
       `SELECT
          COUNT(*) AS total,
          COUNT(*) FILTER (WHERE status = 'sent')      AS sent,
@@ -94,6 +94,18 @@ const EmailLogRepo = {
          COUNT(DISTINCT to_address) AS unique_recipients
        FROM email_logs`,
     )
+    
+    // Parse all counts to integers (Postgres returns COUNT(*) as strings)
+    return {
+      total: parseInt(row.total, 10),
+      sent: parseInt(row.sent, 10),
+      delivered: parseInt(row.delivered, 10),
+      bounced: parseInt(row.bounced, 10),
+      failed: parseInt(row.failed, 10),
+      last_24h: parseInt(row.last_24h, 10),
+      last_7d: parseInt(row.last_7d, 10),
+      unique_recipients: parseInt(row.unique_recipients, 10),
+    }
   },
 
   async getVolumeByDay({ days = 30 } = {}) {
@@ -114,7 +126,7 @@ const EmailLogRepo = {
   },
 
   async getTemplateBreakdown() {
-    return db.any(
+    const rows = await db.any(
       `SELECT
          COALESCE(template, 'unknown') AS template,
          COUNT(*) AS total,
@@ -124,6 +136,14 @@ const EmailLogRepo = {
        GROUP BY template
        ORDER BY total DESC`,
     )
+    
+    // Parse counts in each row (Postgres returns COUNT(*) as strings)
+    return rows.map(row => ({
+      template: row.template,
+      total: parseInt(row.total, 10),
+      failed: parseInt(row.failed, 10),
+      bounced: parseInt(row.bounced, 10),
+    }))
   },
 }
 
