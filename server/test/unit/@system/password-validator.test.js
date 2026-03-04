@@ -11,36 +11,48 @@ describe('validatePassword', () => {
     expect(result.valid).toBe(false)
   })
 
-  it('rejects password shorter than 8 characters', () => {
-    const result = validatePassword('Ab1')
+  it('rejects password shorter than 12 characters', () => {
+    const result = validatePassword('Ab1!')
     expect(result.valid).toBe(false)
-    expect(result.message).toMatch(/8 characters/i)
+    expect(result.message).toMatch(/12 characters/i)
   })
 
   it('rejects password with no uppercase letter', () => {
-    const result = validatePassword('alllower1')
+    const result = validatePassword('alllower1!xxx')
     expect(result.valid).toBe(false)
     expect(result.message).toMatch(/uppercase/i)
   })
 
   it('rejects password with no number', () => {
-    const result = validatePassword('NoNumber')
+    const result = validatePassword('NoNumber!xxxx')
     expect(result.valid).toBe(false)
     expect(result.message).toMatch(/number/i)
   })
 
-  it('accepts a strong password', () => {
-    const result = validatePassword('StrongPass1')
+  it('rejects password with no special character', () => {
+    const result = validatePassword('StrongPass1234')
+    expect(result.valid).toBe(false)
+    expect(result.message).toMatch(/special/i)
+  })
+
+  it('accepts a strong password meeting all requirements', () => {
+    const result = validatePassword('StrongP@ss1234')
     expect(result.valid).toBe(true)
   })
 
   it('accepts password with special characters', () => {
-    const result = validatePassword('P@ssw0rd!')
+    const result = validatePassword('P@ssw0rd!xxxxx')
     expect(result.valid).toBe(true)
   })
 
-  it('accepts minimum valid password (8 chars, upper, number)', () => {
-    const result = validatePassword('Passw0rd')
+  it('rejects password of exactly 11 characters', () => {
+    const result = validatePassword('StrongP@ss1')
+    expect(result.valid).toBe(false)
+    expect(result.message).toMatch(/12 characters/i)
+  })
+
+  it('accepts minimum valid password (12 chars, upper, number, special)', () => {
+    const result = validatePassword('Passw0rd!xxx')
     expect(result.valid).toBe(true)
   })
 

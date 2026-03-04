@@ -81,11 +81,12 @@ describe('POST /api/register (setup auth)', () => {
 
 describe('GET /api/research-findings', () => {
   let authToken
+  const mockUser = { id: 1, email: 'test@example.com', name: 'Test User', role: 'user', email_verified_at: new Date() }
 
   beforeAll(async () => {
     // Mock user for auth
     db.oneOrNone.mockResolvedValueOnce(null) // email not found
-    db.one.mockResolvedValueOnce({ id: 1, email: 'test@example.com' }) // user created
+    db.one.mockResolvedValueOnce(mockUser) // user created
 
     const res = await request(app)
       .post('/api/register')
@@ -113,6 +114,8 @@ describe('GET /api/research-findings', () => {
       }
     ]
 
+    // First call: authenticate middleware looks up user
+    db.oneOrNone.mockResolvedValueOnce(mockUser)
     db.any.mockResolvedValueOnce(mockFindings)
     db.one.mockResolvedValueOnce({ count: '1' })
 
@@ -127,6 +130,7 @@ describe('GET /api/research-findings', () => {
   })
 
   test('should filter by source', async () => {
+    db.oneOrNone.mockResolvedValueOnce(mockUser)
     db.any.mockResolvedValueOnce([])
     db.one.mockResolvedValueOnce({ count: '0' })
 
@@ -139,6 +143,7 @@ describe('GET /api/research-findings', () => {
   })
 
   test('should filter by date range', async () => {
+    db.oneOrNone.mockResolvedValueOnce(mockUser)
     db.any.mockResolvedValueOnce([])
     db.one.mockResolvedValueOnce({ count: '0' })
 
@@ -152,10 +157,11 @@ describe('GET /api/research-findings', () => {
 
 describe('POST /api/research-findings', () => {
   let authToken
+  const mockUser = { id: 1, email: 'test@example.com', name: 'Test User', role: 'user', email_verified_at: new Date() }
 
   beforeAll(async () => {
     db.oneOrNone.mockResolvedValueOnce(null)
-    db.one.mockResolvedValueOnce({ id: 1, email: 'test@example.com' })
+    db.one.mockResolvedValueOnce(mockUser)
 
     const res = await request(app)
       .post('/api/register')
@@ -181,6 +187,7 @@ describe('POST /api/research-findings', () => {
       updated_at: new Date()
     }
 
+    db.oneOrNone.mockResolvedValueOnce(mockUser)
     db.one.mockResolvedValueOnce(newFinding)
 
     const res = await request(app)
@@ -199,6 +206,8 @@ describe('POST /api/research-findings', () => {
   })
 
   test('should return 400 when required fields are missing', async () => {
+    db.oneOrNone.mockResolvedValueOnce(mockUser)
+    
     const res = await request(app)
       .post('/api/research-findings')
       .set('Authorization', `Bearer ${authToken}`)
@@ -209,6 +218,8 @@ describe('POST /api/research-findings', () => {
   })
 
   test('should return 400 when source is invalid', async () => {
+    db.oneOrNone.mockResolvedValueOnce(mockUser)
+    
     const res = await request(app)
       .post('/api/research-findings')
       .set('Authorization', `Bearer ${authToken}`)
@@ -225,10 +236,11 @@ describe('POST /api/research-findings', () => {
 
 describe('PATCH /api/research-findings/:id', () => {
   let authToken
+  const mockUser = { id: 1, email: 'test@example.com', name: 'Test User', role: 'user', email_verified_at: new Date() }
 
   beforeAll(async () => {
     db.oneOrNone.mockResolvedValueOnce(null)
-    db.one.mockResolvedValueOnce({ id: 1, email: 'test@example.com' })
+    db.one.mockResolvedValueOnce(mockUser)
 
     const res = await request(app)
       .post('/api/register')
@@ -257,7 +269,11 @@ describe('PATCH /api/research-findings/:id', () => {
       title: 'New Title'
     }
 
-    db.oneOrNone.mockResolvedValueOnce(existingFinding)
+    // First call: authenticate middleware looks up user
+    // Second call: PATCH handler looks up existing finding
+    db.oneOrNone
+      .mockResolvedValueOnce(mockUser)
+      .mockResolvedValueOnce(existingFinding)
     db.one.mockResolvedValueOnce(updatedFinding)
 
     const res = await request(app)
@@ -270,7 +286,11 @@ describe('PATCH /api/research-findings/:id', () => {
   })
 
   test('should return 404 when finding not found', async () => {
-    db.oneOrNone.mockResolvedValueOnce(null)
+    // First call: authenticate middleware looks up user
+    // Second call: PATCH handler looks up finding (returns null)
+    db.oneOrNone
+      .mockResolvedValueOnce(mockUser)
+      .mockResolvedValueOnce(null)
 
     const res = await request(app)
       .patch('/api/research-findings/999')
@@ -283,10 +303,11 @@ describe('PATCH /api/research-findings/:id', () => {
 
 describe('DELETE /api/research-findings/:id', () => {
   let authToken
+  const mockUser = { id: 1, email: 'test@example.com', name: 'Test User', role: 'user', email_verified_at: new Date() }
 
   beforeAll(async () => {
     db.oneOrNone.mockResolvedValueOnce(null)
-    db.one.mockResolvedValueOnce({ id: 1, email: 'test@example.com' })
+    db.one.mockResolvedValueOnce(mockUser)
 
     const res = await request(app)
       .post('/api/register')
@@ -301,6 +322,7 @@ describe('DELETE /api/research-findings/:id', () => {
   })
 
   test('should delete a research finding', async () => {
+    db.oneOrNone.mockResolvedValueOnce(mockUser)
     db.result.mockResolvedValueOnce({ rowCount: 1 })
 
     const res = await request(app)
@@ -312,6 +334,7 @@ describe('DELETE /api/research-findings/:id', () => {
   })
 
   test('should return 404 when finding not found', async () => {
+    db.oneOrNone.mockResolvedValueOnce(mockUser)
     db.result.mockResolvedValueOnce({ rowCount: 0 })
 
     const res = await request(app)
@@ -324,10 +347,11 @@ describe('DELETE /api/research-findings/:id', () => {
 
 describe('POST /api/research-findings/:id/create-task', () => {
   let authToken
+  const mockUser = { id: 1, email: 'test@example.com', name: 'Test User', role: 'user', email_verified_at: new Date() }
 
   beforeAll(async () => {
     db.oneOrNone.mockResolvedValueOnce(null)
-    db.one.mockResolvedValueOnce({ id: 1, email: 'test@example.com' })
+    db.one.mockResolvedValueOnce(mockUser)
 
     const res = await request(app)
       .post('/api/register')
@@ -362,7 +386,10 @@ describe('POST /api/research-findings/:id/create-task', () => {
       sort_order: 0
     }
 
-    db.oneOrNone.mockResolvedValueOnce(finding)
+    // First: auth lookup, Second: finding lookup
+    db.oneOrNone
+      .mockResolvedValueOnce(mockUser)
+      .mockResolvedValueOnce(finding)
     db.one.mockResolvedValueOnce(newTask)
 
     const res = await request(app)
@@ -404,7 +431,9 @@ describe('POST /api/research-findings/:id/create-task', () => {
       sort_order: 0
     }
 
+    // First: auth lookup, Second: finding lookup, Third: parent goal lookup
     db.oneOrNone
+      .mockResolvedValueOnce(mockUser)
       .mockResolvedValueOnce(finding)
       .mockResolvedValueOnce(parentGoal)
     db.one.mockResolvedValueOnce(newTask)
@@ -424,7 +453,10 @@ describe('POST /api/research-findings/:id/create-task', () => {
   })
 
   test('should return 404 when finding not found', async () => {
-    db.oneOrNone.mockResolvedValueOnce(null)
+    // First: auth lookup, Second: finding lookup (returns null)
+    db.oneOrNone
+      .mockResolvedValueOnce(mockUser)
+      .mockResolvedValueOnce(null)
 
     const res = await request(app)
       .post('/api/research-findings/999/create-task')
@@ -443,7 +475,9 @@ describe('POST /api/research-findings/:id/create-task', () => {
       summary: 'Summary'
     }
 
+    // First: auth lookup, Second: finding lookup, Third: parent goal lookup (returns null)
     db.oneOrNone
+      .mockResolvedValueOnce(mockUser)
       .mockResolvedValueOnce(finding)
       .mockResolvedValueOnce(null) // parent not found
 

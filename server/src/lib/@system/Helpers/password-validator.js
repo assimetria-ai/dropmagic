@@ -2,9 +2,10 @@
 // Used by: POST /api/users (register), POST /api/users/me/password, POST /api/users/password/reset
 
 const RULES = [
-  { key: 'minLength',  test: (p) => p.length >= 8,              message: 'Password must be at least 8 characters' },
+  { key: 'minLength',  test: (p) => p.length >= 12,             message: 'Password must be at least 12 characters' },
   { key: 'uppercase',  test: (p) => /[A-Z]/.test(p),            message: 'Password must contain at least one uppercase letter' },
   { key: 'number',     test: (p) => /[0-9]/.test(p),            message: 'Password must contain at least one number' },
+  { key: 'special',    test: (p) => /[^A-Za-z0-9]/.test(p),     message: 'Password must contain at least one special character' },
 ]
 
 /**

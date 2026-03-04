@@ -20,4 +20,9 @@ router.use(require('../../api/@system/integrations'))
 router.use(require('../../api/@system/storage'))
 router.use(require('../../api/@system/search'))
 
+// Test helpers — only available in test/development environments
+if (process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'development') {
+  router.use(require('../../api/@system/test-helpers'))
+}
+
 module.exports = router
