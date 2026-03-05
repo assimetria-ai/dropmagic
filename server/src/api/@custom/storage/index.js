@@ -54,15 +54,36 @@ const MAX_SIZE_BYTES = 100 * 1024 * 1024 // 100 MB
  */
 router.post('/storage/presign', authenticate, validate({ body: PresignBody }), async (req, res, next) => {
   try {
-    const { filename, content_type, size, folder = 'uploads' } = req.body
+    const { filename, content_type, size, folder } = req.body
 
     const cleanFilename = filename.trim().replace(/[^a-zA-Z0-9._-]/g, '_')
     const mimeType = content_type
+    
+    // Defense-in-depth: validate folder parameter even though Zod schema already validated it.
+    // This catches any edge cases or future changes to the validation middleware.
+    let sanitizedFolder = 'uploads' // safe default
+    if (folder) {
+      const trimmedFolder = folder.trim()
+      // Strict validation: alphanumeric, hyphens, underscores only
+      if (
+        trimmedFolder.length > 0 &&
+        trimmedFolder.length <= 64 &&
+        /^[a-zA-Z0-9_-]+$/.test(trimmedFolder) &&
+        !trimmedFolder.startsWith('-') &&
+        !trimmedFolder.endsWith('-')
+      ) {
+        sanitizedFolder = trimmedFolder
+      } else {
+        // If we reach here, either Zod validation was bypassed or misconfigured
+        logger.warn({ userId: req.user.id, folder }, 'invalid folder parameter bypassed Zod validation')
+        return res.status(400).json({ message: 'Invalid folder parameter' })
+      }
+    }
 
     const { url, key, bucket, expiresAt } = await S3.createPresignedPutUrl({
       filename: cleanFilename,
       contentType: mimeType,
-      folder, // Already validated and sanitized by Zod schema
+      folder: sanitizedFolder, // Use sanitized value
     })
 
     const record = await FileUploadRepo.create({
