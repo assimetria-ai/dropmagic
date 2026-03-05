@@ -36,6 +36,10 @@ async function authenticate(req, res, next) {
       }
       const user = await UserRepo.findById(apiKey.user_id)
       if (!user) return res.status(401).json({ message: 'Unauthorized' })
+      // Check if user account is active (account lockout protection)
+      if (user.is_active === false) {
+        return res.status(401).json({ message: 'Account is locked or deactivated' })
+      }
       // Fire-and-forget last_used update
       ApiKeyRepo.touchLastUsed(apiKey.id).catch(() => {})
       req.user = { id: user.id, email: user.email, name: user.name, role: user.role, emailVerified: !!user.email_verified_at, onboardingCompleted: !!user.onboarding_completed }
@@ -47,6 +51,10 @@ async function authenticate(req, res, next) {
     const payload = await verifyTokenAsync(rawToken)
     const user = await UserRepo.findById(payload.userId)
     if (!user) return res.status(401).json({ message: 'Unauthorized' })
+    // Check if user account is active (account lockout protection)
+    if (user.is_active === false) {
+      return res.status(401).json({ message: 'Account is locked or deactivated' })
+    }
     req.user = { id: user.id, email: user.email, name: user.name, role: user.role, emailVerified: !!user.email_verified_at, onboardingCompleted: !!user.onboarding_completed }
     next()
   } catch (err) {
