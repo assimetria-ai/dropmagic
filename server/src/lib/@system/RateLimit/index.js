@@ -118,4 +118,12 @@ const passwordResetLimiter = createLimiter({
   message: 'Too many password reset attempts. Please try again later.',
 })
 
-module.exports = { loginLimiter, registerLimiter, passwordResetLimiter }
+/** Email verification: 10 attempts per hour */
+const emailVerificationLimiter = createLimiter({
+  windowMs: 60 * 60 * 1000,
+  max: 10,
+  prefix: 'rl:email-verify:',
+  message: 'Too many email verification attempts. Please try again later.',
+})
+
+module.exports = { loginLimiter, registerLimiter, passwordResetLimiter, emailVerificationLimiter }
