@@ -59,10 +59,25 @@ router.post('/storage/presign', authenticate, validate({ body: PresignBody }), a
     const cleanFilename = filename.trim().replace(/[^a-zA-Z0-9._-]/g, '_')
     const mimeType = content_type
     
-    // Sanitize folder parameter to prevent path traversal (defense-in-depth)
-    const sanitizedFolder = folder
-      ? folder.trim().replace(/[^a-zA-Z0-9_-]/g, '')
-      : 'uploads'
+    // Validate and sanitize folder parameter (defense-in-depth)
+    let sanitizedFolder = 'uploads' // default
+    if (folder) {
+      const trimmedFolder = folder.trim()
+      // Ensure folder matches safe pattern and has no path traversal
+      if (
+        trimmedFolder.length > 0 &&
+        trimmedFolder.length <= 64 &&
+        /^[a-zA-Z0-9_-]+$/.test(trimmedFolder) &&
+        !trimmedFolder.startsWith('-') &&
+        !trimmedFolder.endsWith('-')
+      ) {
+        sanitizedFolder = trimmedFolder
+      } else {
+        // If validation already passed, this should never happen (defense-in-depth caught an issue)
+        logger.warn({ userId: req.user.id, folder }, 'invalid folder parameter detected after validation')
+        return res.status(400).json({ message: 'Invalid folder parameter' })
+      }
+    }
 
     const { url, key, bucket, expiresAt } = await S3.createPresignedPutUrl({
       filename: cleanFilename,

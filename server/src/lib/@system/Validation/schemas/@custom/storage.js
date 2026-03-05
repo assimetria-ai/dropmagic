@@ -25,15 +25,15 @@ const PresignBody = z.object({
   size: z.number().int().positive().max(MAX_SIZE_BYTES, `File size exceeds maximum of ${MAX_SIZE_BYTES / (1024 * 1024)} MB`).optional(),
   folder: z
     .string()
-    .optional()
+    .trim()
+    .min(1, 'folder must not be empty')
+    .max(64, 'folder must not exceed 64 characters')
+    .regex(/^[a-zA-Z0-9_-]+$/, 'folder must only contain alphanumeric characters, hyphens, and underscores')
     .refine(
-      (v) => !v || /^[a-zA-Z0-9_-]+$/.test(v),
-      'folder must only contain alphanumeric characters, hyphens, and underscores'
+      (v) => !v.startsWith('-') && !v.endsWith('-'),
+      'folder must not start or end with hyphens'
     )
-    .refine(
-      (v) => !v || (!v.includes('..') && !v.startsWith('/') && !v.includes('\\')),
-      'folder cannot contain path traversal sequences'
-    ),
+    .optional(),
 })
 
 const FileIdParams = z.object({
