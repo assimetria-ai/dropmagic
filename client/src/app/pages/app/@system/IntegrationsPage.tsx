@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import {
-  Home, Settings, Shield, CreditCard, Activity, Key, Puzzle,
+  Home, Settings, Shield, CreditCard, Activity, Key, FileText, Puzzle,
   CheckCircle2, XCircle, AlertCircle, RefreshCw, FlaskConical,
 } from 'lucide-react'
 import { Header } from '../../../components/@system/Header/Header'
@@ -39,6 +39,7 @@ interface IntegrationStatus {
 
 const NAV_ITEMS = [
   { icon: Home,     label: 'Dashboard', to: '/app' },
+  { icon: FileText, label: 'Changelog', to: '/app/changelog' },
   { icon: Activity, label: 'Activity',  to: '/app/activity' },
   { icon: CreditCard, label: 'Billing', to: '/app/billing' },
   { icon: Key,      label: 'API Keys',  to: '/app/api-keys' },

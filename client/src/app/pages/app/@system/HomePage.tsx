@@ -1,7 +1,7 @@
 // @system — main app dashboard page with sidebar layout
 // @custom — add your dashboard widgets/sections in the main content area
 import { Link, useLocation } from 'react-router-dom'
-import { Home, Settings, Shield, CreditCard, Activity, Key } from 'lucide-react'
+import { Home, Settings, Shield, CreditCard, Activity, Key, FileText } from 'lucide-react'
 import { Header } from '../../../components/@system/Header/Header'
 import { Sidebar, SidebarLogo, SidebarSection, SidebarItem } from '../../../components/@system/Sidebar/Sidebar'
 import { info } from '@/config/@system/info'
@@ -12,6 +12,7 @@ import { HomePageSkeleton } from '../../../components/@system/Skeleton/Skeleton'
 
 const NAV_ITEMS = [
   { icon: Home, label: 'Dashboard', to: '/app' },
+  { icon: FileText, label: 'Changelog', to: '/app/changelog' },
   { icon: Activity, label: 'Activity', to: '/app/activity' },
   { icon: CreditCard, label: 'Billing', to: '/app/billing' },
   { icon: Key, label: 'API Keys', to: '/app/api-keys' },

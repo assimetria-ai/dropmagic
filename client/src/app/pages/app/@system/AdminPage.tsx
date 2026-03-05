@@ -1,7 +1,7 @@
 // @system — admin dashboard: user management, subscriptions, stats
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Home, Settings, Shield, CreditCard, Activity, Key, RefreshCw } from 'lucide-react'
+import { Home, Settings, Shield, CreditCard, Activity, Key, FileText, RefreshCw } from 'lucide-react'
 import { Header } from '../../../components/@system/Header/Header'
 import { Sidebar, SidebarSection, SidebarItem } from '../../../components/@system/Sidebar/Sidebar'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../../components/@system/Card/Card'
@@ -22,6 +22,7 @@ interface AdminUser {
 
 const NAV_ITEMS = [
   { icon: Home, label: 'Dashboard', to: '/app' },
+  { icon: FileText, label: 'Changelog', to: '/app/changelog' },
   { icon: Activity, label: 'Activity', to: '/app/activity' },
   { icon: CreditCard, label: 'Billing', to: '/app/billing' },
   { icon: Key, label: 'API Keys', to: '/app/api-keys' },

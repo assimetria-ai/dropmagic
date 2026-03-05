@@ -73,6 +73,9 @@ const BlogAdminPage = lazy(() =>
 const HomePage = lazy(() =>
   import('../../pages/app/@system/HomePage').then((m) => ({ default: m.HomePage }))
 )
+const ChangelogPage = lazy(() =>
+  import('../../pages/app/@system/ChangelogPage').then((m) => ({ default: m.ChangelogPage }))
+)
 const SettingsPage = lazy(() =>
   import('../../pages/app/@system/SettingsPage').then((m) => ({ default: m.SettingsPage }))
 )
@@ -183,6 +186,14 @@ export function AppRoutes() {
           element={
             <ProtectedRoute>
               <HomePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/app/changelog"
+          element={
+            <ProtectedRoute>
+              <ChangelogPage />
             </ProtectedRoute>
           }
         />

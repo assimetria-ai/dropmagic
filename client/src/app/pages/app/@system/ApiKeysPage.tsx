@@ -9,6 +9,7 @@ import {
   CreditCard,
   Activity,
   Key,
+  FileText,
   Plus,
   Trash2,
   Copy,
@@ -29,6 +30,7 @@ import { ApiKeysPageSkeleton } from '../../../components/@system/Skeleton/Skelet
 
 const NAV_ITEMS = [
   { icon: Home, label: 'Dashboard', to: '/app' },
+  { icon: FileText, label: 'Changelog', to: '/app/changelog' },
   { icon: Activity, label: 'Activity', to: '/app/activity' },
   { icon: CreditCard, label: 'Billing', to: '/app/billing' },
   { icon: Key, label: 'API Keys', to: '/app/api-keys' },

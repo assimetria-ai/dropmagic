@@ -1,7 +1,7 @@
 // @system — user profile / settings page
 import { useState, useEffect, useCallback, type FormEvent } from 'react'
 import { Link, useLocation, useSearchParams } from 'react-router-dom'
-import { Home, Settings, Shield, CreditCard, Activity, Key, Save, Monitor, Trash2, Bell, User, Lock } from 'lucide-react'
+import { Home, Settings, Shield, CreditCard, Activity, Key, FileText, Save, Monitor, Trash2, Bell, User, Lock } from 'lucide-react'
 import { Header } from '../../../components/@system/Header/Header'
 import { Sidebar, SidebarSection, SidebarItem } from '../../../components/@system/Sidebar/Sidebar'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../../components/@system/Card/Card'
@@ -17,6 +17,7 @@ import { getSessions, revokeSession, type Session } from '../../../api/@system'
 
 const NAV_ITEMS = [
   { icon: Home, label: 'Dashboard', to: '/app' },
+  { icon: FileText, label: 'Changelog', to: '/app/changelog' },
   { icon: Activity, label: 'Activity', to: '/app/activity' },
   { icon: CreditCard, label: 'Billing', to: '/app/billing' },
   { icon: Key, label: 'API Keys', to: '/app/api-keys' },

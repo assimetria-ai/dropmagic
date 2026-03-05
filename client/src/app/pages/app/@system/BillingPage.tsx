@@ -8,6 +8,7 @@ import {
   CreditCard,
   Activity,
   Key,
+  FileText,
   ExternalLink,
   CheckCircle2,
   XCircle,
@@ -37,6 +38,7 @@ import {
 
 const NAV_ITEMS = [
   { icon: Home, label: 'Dashboard', to: '/app' },
+  { icon: FileText, label: 'Changelog', to: '/app/changelog' },
   { icon: Activity, label: 'Activity', to: '/app/activity' },
   { icon: CreditCard, label: 'Billing', to: '/app/billing' },
   { icon: Key, label: 'API Keys', to: '/app/api-keys' },
