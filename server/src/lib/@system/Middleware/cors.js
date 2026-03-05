@@ -1,9 +1,13 @@
 const cors = require('cors')
 
+// Parse DEV_ORIGINS from comma-separated env var (e.g., "http://localhost:5173,http://localhost:3000")
+const devOrigins = process.env.DEV_ORIGINS
+  ? process.env.DEV_ORIGINS.split(',').map(o => o.trim()).filter(Boolean)
+  : []
+
 const ALLOWED_ORIGINS = [
   process.env.APP_URL,
-  'http://localhost:5173',
-  'http://localhost:3000',
+  ...devOrigins,
 ].filter(Boolean)
 
 function isOriginAllowed(origin) {
