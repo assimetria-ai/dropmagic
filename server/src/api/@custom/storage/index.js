@@ -58,11 +58,16 @@ router.post('/storage/presign', authenticate, validate({ body: PresignBody }), a
 
     const cleanFilename = filename.trim().replace(/[^a-zA-Z0-9._-]/g, '_')
     const mimeType = content_type
+    
+    // Sanitize folder parameter to prevent path traversal (defense-in-depth)
+    const sanitizedFolder = folder
+      ? folder.trim().replace(/[^a-zA-Z0-9_-]/g, '')
+      : 'uploads'
 
     const { url, key, bucket, expiresAt } = await S3.createPresignedPutUrl({
       filename: cleanFilename,
       contentType: mimeType,
-      folder: folder ?? 'uploads',
+      folder: sanitizedFolder,
     })
 
     const record = await FileUploadRepo.create({

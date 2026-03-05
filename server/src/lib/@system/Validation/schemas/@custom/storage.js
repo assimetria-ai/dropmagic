@@ -23,7 +23,17 @@ const PresignBody = z.object({
     .trim()
     .refine((v) => ALLOWED_MIME_TYPES.includes(v), (v) => ({ message: `Unsupported content type: ${v}` })),
   size: z.number().int().positive().max(MAX_SIZE_BYTES, `File size exceeds maximum of ${MAX_SIZE_BYTES / (1024 * 1024)} MB`).optional(),
-  folder: z.string().optional(),
+  folder: z
+    .string()
+    .optional()
+    .refine(
+      (v) => !v || /^[a-zA-Z0-9_-]+$/.test(v),
+      'folder must only contain alphanumeric characters, hyphens, and underscores'
+    )
+    .refine(
+      (v) => !v || (!v.includes('..') && !v.startsWith('/') && !v.includes('\\')),
+      'folder cannot contain path traversal sequences'
+    ),
 })
 
 const FileIdParams = z.object({
