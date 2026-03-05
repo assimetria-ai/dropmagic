@@ -15,12 +15,18 @@ const app = express()
 app.use(securityHeaders)
 app.use(cors)
 app.use(compression())
-app.use(express.json({ limit: '10mb' }))
 app.use(cookieParser())
 
 if (process.env.NODE_ENV !== 'test') {
   app.use(pinoHttp({ logger }))
 }
+
+// Mount Stripe webhook BEFORE express.json() — requires raw body for signature verification
+const stripeWebhookRouter = require('./api/@system/stripe-webhook')
+app.use('/api', stripeWebhookRouter)
+
+// Parse JSON for all other routes
+app.use(express.json({ limit: '10mb' }))
 
 // Local file uploads — serve before API routes so /uploads/* resolves correctly
 const localUploadsDir = process.env.LOCAL_STORAGE_DIR ?? path.join(__dirname, '..', 'uploads')
