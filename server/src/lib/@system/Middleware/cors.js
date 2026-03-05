@@ -11,11 +11,12 @@ const ALLOWED_ORIGINS = [
 ].filter(Boolean)
 
 function isOriginAllowed(origin) {
-  // SECURITY: Only allow no-origin requests in development (for curl, Postman, local tooling)
-  // In production, require an Origin header to prevent CORS bypass attacks.
-  // Legitimate server-to-server requests and health checks don't need CORS (they don't send credentials).
+  // SECURITY: Always require an Origin header to prevent CORS bypass attacks.
+  // Requests without Origin (curl, server-to-server) are blocked in all environments.
+  // Legitimate server-to-server requests don't need CORS (they don't send credentials).
+  // For local development testing, use a proper origin header or use the API without credentials.
   if (!origin) {
-    return process.env.NODE_ENV === 'development'
+    return false
   }
 
   // Exact match
