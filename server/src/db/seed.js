@@ -21,12 +21,16 @@
 require('dotenv').config()
 
 const bcrypt = require('bcryptjs')
+const crypto = require('crypto')
 const db = require('../lib/@system/PostgreSQL')
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
 const BCRYPT_ROUNDS = 10
-const DEFAULT_PASSWORD = 'password123'
+
+// Security: Use env var for seed password, fallback to random generated password
+// NEVER use a hardcoded weak password in production
+const DEFAULT_PASSWORD = process.env.SEED_PASSWORD || crypto.randomBytes(32).toString('base64')
 
 const args = process.argv.slice(2)
 const CLEAN = args.includes('--clean')
@@ -202,7 +206,13 @@ async function seedUsers() {
     inserted.push(row)
   }
 
-  log(`Seeded ${inserted.length} users (including 1 admin). Default password: "${DEFAULT_PASSWORD}"`)
+  if (process.env.SEED_PASSWORD) {
+    log(`Seeded ${inserted.length} users (including 1 admin). Password: [from SEED_PASSWORD env var]`)
+  } else {
+    log(`⚠️  WARNING: No SEED_PASSWORD env var set. Generated random password:`)
+    log(`⚠️  Password: "${DEFAULT_PASSWORD}"`)
+    log(`⚠️  Set SEED_PASSWORD environment variable to use a specific password for seed data.`)
+  }
   return inserted
 }
 
@@ -310,6 +320,9 @@ async function main() {
   log(`Environment:  ${process.env.NODE_ENV ?? 'development'}`)
   log(`Database:     ${(process.env.DATABASE_URL ?? 'default').replace(/:\/\/.*@/, '://<credentials>@')}`)
   log(`Clean mode:   ${CLEAN}`)
+  if (!process.env.SEED_PASSWORD) {
+    log('⚠️  SECURITY WARNING: SEED_PASSWORD not set - using generated random password')
+  }
   log('─'.repeat(50))
 
   try {
