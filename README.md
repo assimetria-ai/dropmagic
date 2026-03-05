@@ -1,6 +1,8 @@
-# product-template
+# DropMagic
 
-Assimetria product template — React (Vite) + Node.js/Express + PostgreSQL + shadcn/ui
+Launch your next product drop with countdown pages, email captures, and viral share mechanics.
+
+Built with React (Vite) + Node.js/Express + PostgreSQL + shadcn/ui
 
 ## Tech Stack
 
