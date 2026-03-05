@@ -11,10 +11,11 @@ const ALLOWED_ORIGINS = [
 ].filter(Boolean)
 
 function isOriginAllowed(origin) {
-  // In production, deny requests with no Origin header (blocks server-to-server CORS bypass).
-  // In development, allow no-origin for curl, Postman, and local tooling convenience.
-  if (!origin) { // Allow healthchecks, server-to-server, curl
-    return true // was: only in dev. Now: allow for healthcheck probes
+  // SECURITY: Only allow no-origin requests in development (for curl, Postman, local tooling)
+  // In production, require an Origin header to prevent CORS bypass attacks.
+  // Legitimate server-to-server requests and health checks don't need CORS (they don't send credentials).
+  if (!origin) {
+    return process.env.NODE_ENV === 'development'
   }
 
   // Exact match
