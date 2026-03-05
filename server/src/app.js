@@ -4,6 +4,7 @@ const express = require('express')
 const compression = require('compression')
 const cookieParser = require('cookie-parser')
 const pinoHttp = require('pino-http')
+const { doubleCsrf } = require('csrf-csrf')
 
 const logger = require('./lib/@system/Logger')
 const { cors, securityHeaders } = require('./lib/@system/Middleware')
@@ -27,6 +28,41 @@ app.use('/api', stripeWebhookRouter)
 
 // Parse JSON for all other routes
 app.use(express.json({ limit: '10mb' }))
+
+// CSRF Protection — double-submit cookie pattern
+const csrfSecret = process.env.CSRF_SECRET || 'default-csrf-secret-change-in-production'
+const { generateToken, doubleCsrfProtection } = doubleCsrf({
+  getSecret: () => csrfSecret,
+  cookieName: '__Host-csrf.token',
+  cookieOptions: {
+    sameSite: 'strict',
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+  },
+  size: 64,
+  ignoredMethods: ['GET', 'HEAD', 'OPTIONS'],
+  getTokenFromRequest: (req) => req.headers['x-csrf-token'],
+})
+
+// CSRF token generation endpoint (must be called before making state-changing requests)
+app.get('/api/csrf-token', (req, res) => {
+  const token = generateToken(req, res)
+  res.json({ csrfToken: token })
+})
+
+// Apply CSRF protection to all routes except webhooks
+// Webhooks already use signature verification (e.g., Stripe webhook signatures)
+app.use((req, res, next) => {
+  // Skip CSRF for webhook endpoints (they use their own verification)
+  if (req.path.startsWith('/api/webhook')) {
+    return next()
+  }
+  // Apply CSRF protection to state-changing methods
+  if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(req.method)) {
+    return doubleCsrfProtection(req, res, next)
+  }
+  next()
+})
 
 // Local file uploads — serve before API routes so /uploads/* resolves correctly
 const localUploadsDir = process.env.LOCAL_STORAGE_DIR ?? path.join(__dirname, '..', 'uploads')
