@@ -144,6 +144,7 @@ export function AppRoutes() {
 
         {/* Pricing (public) */}
         <Route path="/pricing" element={<PricingPage />} />
+        <Route path="/products" element={<Navigate to="/pricing" replace />} />
 
         {/* Help center / knowledge base */}
         <Route path="/help" element={<HelpCenterPage />} />
