@@ -12,3 +12,4 @@ coverage/
 # Database backups — keep directory tracked, ignore backup files
 backups/*.dump
 backups/*.dump.gz
+*.backup-before-security-fix
