@@ -33,7 +33,12 @@ async function hasActiveSessions(userId) {
     const sessions = await SessionRepo.findActiveByUserId(userId)
     return sessions && sessions.length > 0
   } catch (err) {
-    console.error('[auth/isRevoked] ERROR: revoked_tokens DB check failed (1 connection timeout)', err)
+    console.error('[auth/hasActiveSessions] DB check failed, failing open to prevent lockout:', {
+      userId,
+      errorCode: err.code,
+      errorMessage: err.message,
+      hint: 'JWT expiry is still enforced'
+    })
     // On DB error, allow the request (fail open) to prevent lockout during outages
     // The JWT expiry is still enforced, providing some security
     return true
