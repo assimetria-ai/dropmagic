@@ -3,6 +3,7 @@ const router = express.Router()
 
 router.use(require('../../api/@system/ping'))
 router.use(require('../../api/@system/health'))
+router.use(require('../../api/@system/data-health'))
 router.use(require('../../api/@system/sessions'))
 router.use(require('../../api/@system/user'))
 router.use(require('../../api/@system/user-data'))
