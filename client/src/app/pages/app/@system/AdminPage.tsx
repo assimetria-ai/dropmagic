@@ -1,7 +1,7 @@
-// @system — admin dashboard: user management, subscriptions, stats
+// @system — admin dashboard: user management, subscriptions, stats, compliance
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Home, Settings, Shield, CreditCard, Activity, Key, FileText, RefreshCw } from 'lucide-react'
+import { Home, Settings, Shield, CreditCard, Activity, Key, FileText, RefreshCw, CheckCircle2, XCircle } from 'lucide-react'
 import { Header } from '../../../components/@system/Header/Header'
 import { Sidebar, SidebarSection, SidebarItem } from '../../../components/@system/Sidebar/Sidebar'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../../components/@system/Card/Card'
@@ -20,6 +20,22 @@ interface AdminUser {
   created_at: string
 }
 
+interface ComplianceItem {
+  drop_id: number
+  drop_name: string
+  slug: string
+  drop_status: string
+  privacy_policy: boolean
+  terms_of_service: boolean
+  cookie_consent: boolean
+  gdpr_compliant: boolean
+  privacy_policy_url?: string
+  terms_url?: string
+  cookie_policy_url?: string
+  data_processing_agreement?: string
+  last_updated?: string
+}
+
 const NAV_ITEMS = [
   { icon: Home, label: 'Dashboard', to: '/app' },
   { icon: FileText, label: 'Changelog', to: '/app/changelog' },
@@ -36,6 +52,9 @@ export function AdminPage() {
   const [users, setUsers] = useState<AdminUser[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [compliance, setCompliance] = useState<ComplianceItem[]>([])
+  const [complianceLoading, setComplianceLoading] = useState(false)
+  const [complianceError, setComplianceError] = useState('')
 
   async function fetchUsers() {
     setLoading(true)
@@ -50,8 +69,22 @@ export function AdminPage() {
     }
   }
 
+  async function fetchCompliance() {
+    setComplianceLoading(true)
+    setComplianceError('')
+    try {
+      const { compliance } = await api.get<{ compliance: ComplianceItem[] }>('/admin/compliance')
+      setCompliance(compliance)
+    } catch (err) {
+      setComplianceError(err instanceof Error ? err.message : 'Failed to load compliance data')
+    } finally {
+      setComplianceLoading(false)
+    }
+  }
+
   useEffect(() => {
     fetchUsers()
+    fetchCompliance()
   }, [])
 
   function formatDate(iso: string) {
@@ -102,6 +135,7 @@ export function AdminPage() {
             <TabsList className="mb-6">
               <TabsTrigger value="users">Users</TabsTrigger>
               <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
+              <TabsTrigger value="compliance">Compliance</TabsTrigger>
               <TabsTrigger value="settings">Platform</TabsTrigger>
             </TabsList>
 
@@ -193,6 +227,114 @@ export function AdminPage() {
                     {/* @custom — populate via /admin/subscriptions endpoint */}
                     No subscription data yet.
                   </p>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* ── Compliance tab ── */}
+            <TabsContent value="compliance">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle>Compliance Checklist</CardTitle>
+                    <CardDescription>
+                      Privacy, terms, cookie consent, and GDPR status per product.
+                    </CardDescription>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={fetchCompliance}
+                    disabled={complianceLoading}
+                    className="gap-2"
+                  >
+                    <RefreshCw className={`h-3 w-3 ${complianceLoading ? 'animate-spin' : ''}`} />
+                    Refresh
+                  </Button>
+                </CardHeader>
+                <CardContent>
+                  {complianceError && (
+                    <p className="text-sm text-destructive mb-4">{complianceError}</p>
+                  )}
+                  {complianceLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Product</TableHead>
+                          <TableHead className="text-center">Privacy Policy</TableHead>
+                          <TableHead className="text-center">Terms of Service</TableHead>
+                          <TableHead className="text-center">Cookie Consent</TableHead>
+                          <TableHead className="text-center">GDPR Compliant</TableHead>
+                          <TableHead>Status</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {compliance.map((item) => {
+                          const allCompliant = item.privacy_policy && item.terms_of_service && item.cookie_consent && item.gdpr_compliant
+                          return (
+                            <TableRow key={item.drop_id}>
+                              <TableCell>
+                                <div>
+                                  <p className="font-medium">{item.drop_name}</p>
+                                  <p className="text-xs text-muted-foreground">/{item.slug}</p>
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-center">
+                                {item.privacy_policy ? (
+                                  <CheckCircle2 className="h-5 w-5 text-green-600 inline" />
+                                ) : (
+                                  <XCircle className="h-5 w-5 text-red-600 inline" />
+                                )}
+                              </TableCell>
+                              <TableCell className="text-center">
+                                {item.terms_of_service ? (
+                                  <CheckCircle2 className="h-5 w-5 text-green-600 inline" />
+                                ) : (
+                                  <XCircle className="h-5 w-5 text-red-600 inline" />
+                                )}
+                              </TableCell>
+                              <TableCell className="text-center">
+                                {item.cookie_consent ? (
+                                  <CheckCircle2 className="h-5 w-5 text-green-600 inline" />
+                                ) : (
+                                  <XCircle className="h-5 w-5 text-red-600 inline" />
+                                )}
+                              </TableCell>
+                              <TableCell className="text-center">
+                                {item.gdpr_compliant ? (
+                                  <CheckCircle2 className="h-5 w-5 text-green-600 inline" />
+                                ) : (
+                                  <XCircle className="h-5 w-5 text-red-600 inline" />
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                <span
+                                  className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                                    allCompliant
+                                      ? 'bg-green-100 text-green-800'
+                                      : 'bg-red-100 text-red-800'
+                                  }`}
+                                >
+                                  {allCompliant ? 'Compliant' : 'Incomplete'}
+                                </span>
+                              </TableCell>
+                            </TableRow>
+                          )
+                        })}
+                        {!complianceLoading && compliance.length === 0 && (
+                          <TableRow>
+                            <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                              No products found. Create a drop to see compliance status.
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>

@@ -140,4 +140,126 @@ router.get('/admin/subscriptions/stats', ...guard, async (req, res, next) => {
   }
 })
 
+// ── Compliance ─────────────────────────────────────────────────────────────
+
+// GET /api/admin/compliance — compliance checklist for all drops/products
+router.get('/admin/compliance', ...guard, async (req, res, next) => {
+  try {
+    const compliance = await db.task(async t => {
+      await t.none(ADMIN_QUERY_TIMEOUT)
+      return t.any(
+        `SELECT 
+          d.id AS drop_id, 
+          d.name AS drop_name,
+          d.slug,
+          d.status AS drop_status,
+          COALESCE(c.privacy_policy, FALSE) AS privacy_policy,
+          COALESCE(c.terms_of_service, FALSE) AS terms_of_service,
+          COALESCE(c.cookie_consent, FALSE) AS cookie_consent,
+          COALESCE(c.gdpr_compliant, FALSE) AS gdpr_compliant,
+          c.privacy_policy_url,
+          c.terms_url,
+          c.cookie_policy_url,
+          c.data_processing_agreement,
+          c.last_updated
+        FROM drops d
+        LEFT JOIN compliance c ON c.drop_id = d.id
+        ORDER BY d.created_at DESC`
+      )
+    })
+    res.json({ compliance })
+  } catch (err) {
+    next(err)
+  }
+})
+
+// GET /api/admin/compliance/:dropId — compliance status for a specific drop
+router.get('/admin/compliance/:dropId', ...guard, async (req, res, next) => {
+  try {
+    const { dropId } = req.params
+    const result = await db.oneOrNone(
+      `SELECT 
+        d.id AS drop_id, 
+        d.name AS drop_name,
+        d.slug,
+        d.status AS drop_status,
+        COALESCE(c.privacy_policy, FALSE) AS privacy_policy,
+        COALESCE(c.terms_of_service, FALSE) AS terms_of_service,
+        COALESCE(c.cookie_consent, FALSE) AS cookie_consent,
+        COALESCE(c.gdpr_compliant, FALSE) AS gdpr_compliant,
+        c.privacy_policy_url,
+        c.terms_url,
+        c.cookie_policy_url,
+        c.data_processing_agreement,
+        c.last_updated
+      FROM drops d
+      LEFT JOIN compliance c ON c.drop_id = d.id
+      WHERE d.id = $1`,
+      [dropId]
+    )
+    if (!result) return res.status(404).json({ message: 'Drop not found' })
+    res.json({ compliance: result })
+  } catch (err) {
+    next(err)
+  }
+})
+
+// PATCH /api/admin/compliance/:dropId — update compliance status for a specific drop
+router.patch('/admin/compliance/:dropId', ...guard, async (req, res, next) => {
+  try {
+    const { dropId } = req.params
+    const {
+      privacy_policy,
+      terms_of_service,
+      cookie_consent,
+      gdpr_compliant,
+      privacy_policy_url,
+      terms_url,
+      cookie_policy_url,
+      data_processing_agreement
+    } = req.body
+
+    // First, check if drop exists
+    const drop = await db.oneOrNone('SELECT id FROM drops WHERE id = $1', [dropId])
+    if (!drop) return res.status(404).json({ message: 'Drop not found' })
+
+    // Update or insert compliance record
+    const updated = await db.one(
+      `INSERT INTO compliance (
+        drop_id, privacy_policy, terms_of_service, cookie_consent, gdpr_compliant,
+        privacy_policy_url, terms_url, cookie_policy_url, data_processing_agreement,
+        last_updated
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())
+      ON CONFLICT (drop_id)
+      DO UPDATE SET
+        privacy_policy = COALESCE($2, compliance.privacy_policy),
+        terms_of_service = COALESCE($3, compliance.terms_of_service),
+        cookie_consent = COALESCE($4, compliance.cookie_consent),
+        gdpr_compliant = COALESCE($5, compliance.gdpr_compliant),
+        privacy_policy_url = COALESCE($6, compliance.privacy_policy_url),
+        terms_url = COALESCE($7, compliance.terms_url),
+        cookie_policy_url = COALESCE($8, compliance.cookie_policy_url),
+        data_processing_agreement = COALESCE($9, compliance.data_processing_agreement),
+        last_updated = NOW()
+      RETURNING *`,
+      [
+        dropId,
+        privacy_policy,
+        terms_of_service,
+        cookie_consent,
+        gdpr_compliant,
+        privacy_policy_url,
+        terms_url,
+        cookie_policy_url,
+        data_processing_agreement
+      ]
+    )
+
+    res.json({ compliance: updated })
+  } catch (err) {
+    next(err)
+  }
+})
+
 module.exports = router
