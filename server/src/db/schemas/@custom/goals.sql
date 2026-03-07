@@ -32,4 +32,4 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER goals_updated_at_trigger
   BEFORE UPDATE ON goals
   FOR EACH ROW
-  EXECUTE FUNCTION update_goals_updated_at;
+  EXECUTE FUNCTION update_goals_updated_at();
