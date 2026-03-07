@@ -23,15 +23,8 @@ exports.up = async (db) => {
 }
 
 exports.down = async (db) => {
-  // Rollback recreates the trigger without parentheses (the buggy version)
+  // Rollback: drop the trigger (don't recreate the buggy version)
   await db.none('DROP TRIGGER IF EXISTS goals_updated_at_trigger ON goals')
   
-  await db.none(`
-    CREATE TRIGGER goals_updated_at_trigger
-      BEFORE UPDATE ON goals
-      FOR EACH ROW
-      EXECUTE FUNCTION update_goals_updated_at
-  `)
-  
-  console.log('[019_fix_goals_trigger] Rolled back to version without parentheses')
+  console.log('[019_fix_goals_trigger] Rolled back - trigger dropped')
 }
