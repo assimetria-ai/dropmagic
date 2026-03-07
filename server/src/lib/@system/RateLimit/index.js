@@ -80,8 +80,8 @@ function createLimiter({ windowMs, max, prefix, message = 'Too many requests, pl
     legacyHeaders: false,
     message: { message },
     store,                    // undefined → default in-memory store
-    // Skip rate limiting in test and development environments
-    skip: () => process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'development',
+    // Skip rate limiting ONLY in test environment (not development - security requirement)
+    skip: () => process.env.NODE_ENV === 'test',
     handler(req, res, next, options) {
       logger.warn(
         { ip: req.ip, path: req.path, prefix },
