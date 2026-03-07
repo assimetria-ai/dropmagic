@@ -21,6 +21,7 @@ router.use(require('../../api/@system/ai'))
 router.use(require('../../api/@system/integrations'))
 router.use(require('../../api/@system/storage'))
 router.use(require('../../api/@system/search'))
+router.use(require('../../api/@system/security/csp-report'))
 
 // Test helpers — only available in test/development environments
 if (process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'development') {
