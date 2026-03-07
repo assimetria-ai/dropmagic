@@ -8,3 +8,4 @@ client/dist
 .env
 .env.*
 !.env.example
+# Railway deploy trigger - 2026-03-07T05:01:20Z
