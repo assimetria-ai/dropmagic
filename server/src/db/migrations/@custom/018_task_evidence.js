@@ -31,7 +31,7 @@ exports.down = async (db) => {
     DROP COLUMN IF EXISTS completion_evidence,
     DROP COLUMN IF EXISTS evidence_type,
     DROP COLUMN IF EXISTS evidence_url,
-    DROP COLUMN IF EXISTS completed_at
+    DROP COLUMN IF EXISTS completed_at;
   `)
   console.log('[018_task_evidence] rolled back: task evidence & extended task fields')
 }
