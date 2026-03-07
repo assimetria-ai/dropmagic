@@ -75,10 +75,12 @@ router.get('/data-health', authenticate, async (_req, res) => {
       },
       {
         name: 'goals',
-        requiredFields: ['user_id', 'drop_id'],
+        requiredFields: ['user_id'],
+        optionalFields: ['drop_id', 'parent_id', 'type', 'priority', 'assigned_to', 'product'],
         foreignKeys: [
           { column: 'user_id', refTable: 'users', refColumn: 'id' },
           { column: 'drop_id', refTable: 'drops', refColumn: 'id' },
+          { column: 'parent_id', refTable: 'goals', refColumn: 'id' },
         ],
       },
       {
