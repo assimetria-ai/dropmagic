@@ -8,7 +8,7 @@
 //   const { MyTask } = require('.')
 //   scheduler.registerTask(new MyTask())
 
-const { TestTask } = require('.')
+const { TestTask, ArchiveOldDoneTasks } = require('.')
 
 /**
  * @param {import('../@system/scheduler')} scheduler
@@ -16,6 +16,9 @@ const { TestTask } = require('.')
 function init(scheduler) {
   // Example task — comment out or replace with real tasks
   scheduler.registerTask(new TestTask())
+  
+  // Auto-archive completed tasks older than 7 days
+  scheduler.registerTask(new ArchiveOldDoneTasks())
 }
 
 module.exports = init
