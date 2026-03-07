@@ -37,6 +37,25 @@ const { scheduler } = require('./scheduler/tasks/@system')
 
 const PORT = process.env.PORT ?? 4000
 
+// ── Enhanced Crash Guard (task #9384) ─────────────────────────────────────
+// Captures unhandled promise rejections with full diagnostic information
+// to help identify root causes of connection errors and other async failures
+process.on('unhandledRejection', (reason, promise) => {
+  const errorDetails = {
+    timestamp: new Date().toISOString(),
+    message: reason?.message || String(reason),
+    name: reason?.name,
+    code: reason?.code,        // DB error codes (ECONNRESET, etc.)
+    errno: reason?.errno,      // System error numbers
+    syscall: reason?.syscall,  // System call that failed
+    address: reason?.address,  // Network address (for connection errors)
+    port: reason?.port,        // Network port
+    stack: reason?.stack,      // Full stack trace
+    promise: promise.toString().substring(0, 200)
+  }
+  console.error('[CRASH-GUARD] unhandledRejection (NOT crashing):', JSON.stringify(errorDetails, null, 2))
+})
+
 async function start() {
   await connectPostgres()
   await connectRedis()

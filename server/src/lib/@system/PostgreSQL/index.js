@@ -32,7 +32,8 @@ const logger = require('../Logger')
 const DB_URL = process.env.DATABASE_URL ?? 'postgresql://postgres:postgres@localhost:5432/product_template_dev'
 const POOL_MAX = parseInt(process.env.DB_POOL_MAX ?? '10', 10)
 const POOL_IDLE_TIMEOUT = parseInt(process.env.DB_POOL_IDLE_TIMEOUT ?? '30000', 10)
-const POOL_CONNECTION_TIMEOUT = parseInt(process.env.DB_POOL_CONNECTION_TIMEOUT ?? '2000', 10)
+// Increased from 2000ms to 10000ms (task #9384) to reduce timeout errors on remote databases
+const POOL_CONNECTION_TIMEOUT = parseInt(process.env.DB_POOL_CONNECTION_TIMEOUT ?? '10000', 10)
 
 const connectionConfig = {
   connectionString: DB_URL,
