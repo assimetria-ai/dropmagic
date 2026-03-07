@@ -3,13 +3,37 @@
 
 -- Add task type field (for tasks at level='task')
 ALTER TABLE goals 
-ADD COLUMN IF NOT EXISTS type VARCHAR(20) 
-CHECK (type IN ('feature', 'bug', 'research', 'ops', 'infra', 'content', 'other'));
+ADD COLUMN IF NOT EXISTS type VARCHAR(20);
+
+-- Add check constraint for type
+DO $$ 
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint 
+    WHERE conname = 'goals_type_check' 
+    AND conrelid = 'goals'::regclass
+  ) THEN
+    ALTER TABLE goals ADD CONSTRAINT goals_type_check 
+    CHECK (type IN ('feature', 'bug', 'research', 'ops', 'infra', 'content', 'other'));
+  END IF;
+END $$;
 
 -- Add priority field
 ALTER TABLE goals 
-ADD COLUMN IF NOT EXISTS priority VARCHAR(20) DEFAULT 'medium'
-CHECK (priority IN ('low', 'medium', 'high', 'critical'));
+ADD COLUMN IF NOT EXISTS priority VARCHAR(20) DEFAULT 'medium';
+
+-- Add check constraint for priority
+DO $$ 
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint 
+    WHERE conname = 'goals_priority_check' 
+    AND conrelid = 'goals'::regclass
+  ) THEN
+    ALTER TABLE goals ADD CONSTRAINT goals_priority_check 
+    CHECK (priority IN ('low', 'medium', 'high', 'critical'));
+  END IF;
+END $$;
 
 -- Add assignment tracking
 ALTER TABLE goals 
