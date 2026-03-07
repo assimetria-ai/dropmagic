@@ -129,6 +129,16 @@ function validateEvidence(type, evidenceType, completionEvidence) {
   return null
 }
 
+// GET /api/tasks/evidence-requirements — get evidence requirements by task type
+// MUST come before /tasks/:id to avoid route collision
+router.get('/tasks/evidence-requirements', authenticate, async (req, res, next) => {
+  try {
+    res.json({ evidence_requirements: EVIDENCE_REQUIREMENTS })
+  } catch (err) {
+    next(err)
+  }
+})
+
 // GET /api/tasks — list all tasks with filters
 router.get('/tasks', authenticate, async (req, res, next) => {
   try {
@@ -505,15 +515,6 @@ router.delete('/tasks/:id', authenticate, async (req, res, next) => {
     }
     
     res.json({ success: true, message: 'Task deleted' })
-  } catch (err) {
-    next(err)
-  }
-})
-
-// GET /api/tasks/evidence-requirements — get evidence requirements by task type
-router.get('/tasks/evidence-requirements', authenticate, async (req, res, next) => {
-  try {
-    res.json({ evidence_requirements: EVIDENCE_REQUIREMENTS })
   } catch (err) {
     next(err)
   }
