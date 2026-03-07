@@ -2,6 +2,7 @@ const crypto = require('crypto')
 const { verifyTokenAsync } = require('./jwt')
 const UserRepo = require('../../../db/repos/@system/UserRepo')
 const ApiKeyRepo = require('../../../db/repos/@system/ApiKeyRepo')
+const SessionRepo = require('../../../db/repos/@system/SessionRepo')
 
 /**
  * Reads the access token from:
@@ -15,6 +16,28 @@ function extractAccessToken(req) {
     req.cookies?.token ??
     req.headers.authorization?.replace('Bearer ', '')
   )
+}
+
+/**
+ * Check if a user has any active (non-revoked, non-expired) sessions.
+ * Used as a basic revocation check for JWT access tokens.
+ * Returns true if user has at least one active session, false otherwise.
+ * 
+ * Note: JWTs are stateless and can't be individually revoked. This check
+ * ensures that if ALL sessions are revoked, the JWT is rejected even if
+ * it hasn't expired yet. Individual session revocation doesn't affect
+ * existing JWTs (they expire in 15min by default).
+ */
+async function hasActiveSessions(userId) {
+  try {
+    const sessions = await SessionRepo.findActiveByUserId(userId)
+    return sessions && sessions.length > 0
+  } catch (err) {
+    console.error('[auth/isRevoked] ERROR: revoked_tokens DB check failed (1 connection timeout)', err)
+    // On DB error, allow the request (fail open) to prevent lockout during outages
+    // The JWT expiry is still enforced, providing some security
+    return true
+  }
 }
 
 function hashKey(raw) {
@@ -54,6 +77,13 @@ async function authenticate(req, res, next) {
     // Check if user account is active (account lockout protection)
     if (user.is_active === false) {
       return res.status(401).json({ message: 'Account is locked or deactivated' })
+    }
+    // Check if user has any active sessions (revocation check)
+    // Note: This only rejects if ALL sessions are revoked. Individual session
+    // revocation doesn't affect existing JWTs until they expire.
+    const hasActive = await hasActiveSessions(user.id)
+    if (!hasActive) {
+      return res.status(401).json({ message: 'All sessions have been revoked' })
     }
     req.user = { id: user.id, email: user.email, name: user.name, role: user.role, emailVerified: !!user.email_verified_at, onboardingCompleted: !!user.onboarding_completed }
     next()
