@@ -41,6 +41,16 @@ const PORT = process.env.PORT ?? 4000
 // Captures unhandled promise rejections with full diagnostic information
 // to help identify root causes of connection errors and other async failures
 process.on('unhandledRejection', (reason, promise) => {
+  // Safely extract promise info (task #9385: fix "invalid input" errors)
+  let promiseStr = '[unable to stringify promise]'
+  try {
+    if (promise && typeof promise.toString === 'function') {
+      promiseStr = promise.toString().substring(0, 200)
+    }
+  } catch (_) {
+    // Ignore errors from promise.toString()
+  }
+
   const errorDetails = {
     timestamp: new Date().toISOString(),
     message: reason?.message || String(reason),
@@ -51,9 +61,16 @@ process.on('unhandledRejection', (reason, promise) => {
     address: reason?.address,  // Network address (for connection errors)
     port: reason?.port,        // Network port
     stack: reason?.stack,      // Full stack trace
-    promise: promise.toString().substring(0, 200)
+    promise: promiseStr
   }
-  console.error('[CRASH-GUARD] unhandledRejection (NOT crashing):', JSON.stringify(errorDetails, null, 2))
+  
+  try {
+    console.error('[CRASH-GUARD] unhandledRejection (NOT crashing):', JSON.stringify(errorDetails, null, 2))
+  } catch (stringifyError) {
+    // Fallback if JSON.stringify fails (circular refs, etc.)
+    console.error('[CRASH-GUARD] unhandledRejection (NOT crashing):', errorDetails.message || 'unknown error')
+    console.error('[CRASH-GUARD] JSON.stringify failed:', stringifyError.message)
+  }
 })
 
 async function start() {
