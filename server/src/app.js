@@ -36,8 +36,9 @@ app.use('/api', apiLimiter)
 
 // CSRF Protection — double-submit cookie pattern
 const csrfSecret = process.env.CSRF_SECRET || 'default-csrf-secret-change-in-production'
-const { generateToken, doubleCsrfProtection } = doubleCsrf({
+const { generateCsrfToken, doubleCsrfProtection } = doubleCsrf({
   getSecret: () => csrfSecret,
+  getSessionIdentifier: (req) => '', // Stateless - cookie-based only
   cookieName: '__Host-csrf.token',
   cookieOptions: {
     sameSite: 'strict',
@@ -51,7 +52,7 @@ const { generateToken, doubleCsrfProtection } = doubleCsrf({
 
 // CSRF token generation endpoint (must be called before making state-changing requests)
 app.get('/api/csrf-token', (req, res) => {
-  const token = generateToken(req, res)
+  const token = generateCsrfToken(req, res)
   res.json({ csrfToken: token })
 })
 
