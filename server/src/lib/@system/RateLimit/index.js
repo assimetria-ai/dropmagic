@@ -126,4 +126,18 @@ const emailVerificationLimiter = createLimiter({
   message: 'Too many email verification attempts. Please try again later.',
 })
 
-module.exports = { loginLimiter, registerLimiter, passwordResetLimiter, emailVerificationLimiter }
+/** General API rate limiter: 100 requests per 15 minutes */
+const apiLimiter = createLimiter({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  prefix: 'rl:api:',
+  message: 'Too many requests. Please try again later.',
+})
+
+module.exports = { 
+  loginLimiter, 
+  registerLimiter, 
+  passwordResetLimiter, 
+  emailVerificationLimiter,
+  apiLimiter,
+}

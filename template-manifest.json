@@ -11,7 +11,7 @@
     "database": "PostgreSQL",
     "logging": "Pino + pino-http"
   },
-  "categories": ["auth", "database", "dashboard", "landing", "legal", "referral", "payments", "support", "storage", "devops", "email", "testing", "analytics", "misc"],
+  "categories": ["auth", "database", "dashboard", "landing", "legal", "referral", "payments", "support", "storage", "devops", "email", "testing", "analytics", "security", "misc"],
   "features": [
     {
       "id": "auth-001",
@@ -166,6 +166,29 @@
       "files": [
         "server/src/api/@system/ping/index.js",
         "server/src/api/@system/health/index.js"
+      ]
+    },
+    {
+      "id": "security-001",
+      "name": "Security Middleware Suite",
+      "category": "security",
+      "status": "built",
+      "version": "1.0.0",
+      "description": "Comprehensive security middleware protecting against common web vulnerabilities. Includes: Helmet (security headers, CSP, HSTS, XSS protection), CSRF protection (double-submit cookie pattern), rate limiting (auth endpoints + general API limiter with Redis backing), input validation (Zod schemas), and CORS configuration with origin whitelisting. All OWASP best practices implemented by default.",
+      "files": [
+        "server/src/lib/@system/Middleware/security.js",
+        "server/src/lib/@system/Middleware/cors.js",
+        "server/src/lib/@system/RateLimit/index.js",
+        "server/src/lib/@system/Validation/index.js",
+        "server/src/app.js",
+        "server/docs/SECURITY.md",
+        "server/docs/CSRF_PROTECTION.md"
+      ],
+      "envVars": [
+        "CSRF_SECRET",
+        "APP_URL",
+        "DEV_ORIGINS",
+        "REDIS_URL"
       ]
     },
     {
@@ -379,6 +402,12 @@
       "version": "1.2.0",
       "author": "frederico-junior",
       "changes": "email-001 upgraded to v2.0.0: built pluggable adapter architecture. Resend native REST API adapter (adapters/resend.js) — uses Node 18 fetch, no SDK dependency, supports cc/bcc/reply-to/attachments, verify() health check. SMTP adapter (adapters/smtp.js) — nodemailer wrapper with connection pooling, configurable TLS, works with Resend SMTP relay + SendGrid + Mailgun etc. Email index.js refactored to clean provider-selection logic (resend > smtp > ses > console). Admin API: GET /api/email/verify endpoint added. 29 unit tests — all passing."
+    },
+    {
+      "date": "2026-03-07",
+      "version": "1.3.0",
+      "author": "felix-junior",
+      "changes": "Added security-001: Security Middleware Suite. Documented comprehensive security features already implemented in template. Created docs/SECURITY.md guide covering helmet (security headers, CSP, HSTS), CSRF protection (double-submit cookie), rate limiting (auth + general API limiter with Redis), input validation (Zod), and CORS. Added general API rate limiter (100 req/15min) to complement existing auth limiters. All OWASP best practices now documented and enforced by default."
     }
   ]
 }

@@ -8,6 +8,7 @@ const { doubleCsrf } = require('csrf-csrf')
 
 const logger = require('./lib/@system/Logger')
 const { cors, securityHeaders } = require('./lib/@system/Middleware')
+const { apiLimiter } = require('./lib/@system/RateLimit')
 const systemRoutes = require('./routes/@system')
 const customRoutes = require('./routes/@custom')
 
@@ -28,6 +29,10 @@ app.use('/api', stripeWebhookRouter)
 
 // Parse JSON for all other routes
 app.use(express.json({ limit: '10mb' }))
+
+// General API rate limiting — 100 requests per 15 minutes
+// Applied to all /api routes to prevent abuse and DoS attacks
+app.use('/api', apiLimiter)
 
 // CSRF Protection — double-submit cookie pattern
 const csrfSecret = process.env.CSRF_SECRET || 'default-csrf-secret-change-in-production'
