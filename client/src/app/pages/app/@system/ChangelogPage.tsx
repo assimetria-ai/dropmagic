@@ -1,12 +1,14 @@
 // @system — changelog page: displays product updates and release notes
-// @custom — update CHANGELOG_ENTRIES with your actual updates
+// @custom — auto-generated from completed tasks via /api/changelog
+import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Home, Settings, Shield, CreditCard, Activity, Key, FileText, Star, Zap, Bug, Plus, Sparkles } from 'lucide-react'
+import { Home, Settings, Shield, CreditCard, Activity, Key, FileText, Star, Zap, Bug, Plus, Sparkles, Loader2 } from 'lucide-react'
 import { Header } from '../../../components/@system/Header/Header'
 import { Sidebar, SidebarLogo, SidebarSection, SidebarItem } from '../../../components/@system/Sidebar/Sidebar'
 import { useAuthContext } from '../../../store/@system/auth'
 import { info } from '@/config/@system/info'
 import { cn } from '@/app/lib/@system/utils'
+import { api } from '@/app/lib/@system/api'
 
 const NAV_ITEMS = [
   { icon: Home, label: 'Dashboard', to: '/app' },
@@ -21,66 +23,27 @@ const NAV_ITEMS = [
 
 type ChangeType = 'feature' | 'improvement' | 'fix' | 'breaking'
 
-interface ChangelogEntry {
-  version: string
-  date: string
-  title: string
-  description?: string
-  changes: Array<{
-    type: ChangeType
-    text: string
-  }>
+interface Change {
+  id: number
+  type: ChangeType
+  task_type: string
+  text: string
+  description: string | null
+  product: string | null
+  completed_at: string
 }
 
-// ─── Mock Data (replace with real changelog from API or CMS) ────────────────
+interface ChangelogEntry {
+  week_start: string
+  week_end: string
+  title: string
+  changes: Change[]
+}
 
-const CHANGELOG_ENTRIES: ChangelogEntry[] = [
-  {
-    version: '1.2.0',
-    date: '2024-03-01',
-    title: 'Enhanced Dashboard & New Features',
-    description: 'Major improvements to the dashboard experience with new analytics and insights.',
-    changes: [
-      { type: 'feature', text: 'Added real-time analytics dashboard with interactive charts' },
-      { type: 'feature', text: 'New collaboration tools for team workspaces' },
-      { type: 'improvement', text: 'Improved page load performance by 40%' },
-      { type: 'fix', text: 'Fixed issue with CSV export on large datasets' },
-    ],
-  },
-  {
-    version: '1.1.5',
-    date: '2024-02-15',
-    title: 'Bug Fixes & Performance',
-    changes: [
-      { type: 'fix', text: 'Resolved authentication timeout issue on mobile devices' },
-      { type: 'fix', text: 'Fixed sidebar navigation state persistence' },
-      { type: 'improvement', text: 'Enhanced search algorithm for faster results' },
-    ],
-  },
-  {
-    version: '1.1.0',
-    date: '2024-02-01',
-    title: 'API Keys & Integrations',
-    description: 'Powerful new API management tools and third-party integrations.',
-    changes: [
-      { type: 'feature', text: 'Introduced API key management with scoped permissions' },
-      { type: 'feature', text: 'Added webhook support for real-time event notifications' },
-      { type: 'improvement', text: 'Redesigned settings page with better organization' },
-    ],
-  },
-  {
-    version: '1.0.0',
-    date: '2024-01-15',
-    title: 'Initial Launch 🎉',
-    description: 'Our first public release with core features and functionality.',
-    changes: [
-      { type: 'feature', text: 'User authentication with email and 2FA support' },
-      { type: 'feature', text: 'Subscription billing with Stripe integration' },
-      { type: 'feature', text: 'Admin dashboard for user management' },
-      { type: 'feature', text: 'Activity logging and audit trails' },
-    ],
-  },
-]
+interface ChangelogResponse {
+  entries: ChangelogEntry[]
+  pagination: { total: number; limit: number; offset: number }
+}
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
@@ -108,7 +71,7 @@ function ChangeTypeBadge({ type }: { type: ChangeType }) {
     },
   }
 
-  const { icon: Icon, label, className } = config[type]
+  const { icon: Icon, label, className } = config[type] ?? config.improvement
 
   return (
     <span
@@ -126,36 +89,55 @@ function ChangeTypeBadge({ type }: { type: ChangeType }) {
 function ChangelogEntryCard({ entry }: { entry: ChangelogEntry }) {
   return (
     <div className="group relative rounded-lg border border-border bg-card p-6 shadow-sm transition-all hover:shadow-md">
-      {/* Version badge */}
+      {/* Week badge */}
       <div className="absolute -top-3 left-6 flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1 text-xs font-semibold text-primary shadow-sm">
         <Star className="h-3.5 w-3.5" />
-        v{entry.version}
+        {entry.title}
       </div>
 
-      {/* Date */}
+      {/* Date range */}
       <p className="mb-2 mt-2 text-sm text-muted-foreground">
-        {new Date(entry.date).toLocaleDateString('en-US', {
-          year: 'numeric',
+        {new Date(entry.week_start).toLocaleDateString('en-US', {
           month: 'long',
           day: 'numeric',
         })}
+        {' – '}
+        {new Date(entry.week_end).toLocaleDateString('en-US', {
+          month: 'long',
+          day: 'numeric',
+          year: 'numeric',
+        })}
       </p>
-
-      {/* Title & Description */}
-      <h2 className="mb-2 text-xl font-bold">{entry.title}</h2>
-      {entry.description && (
-        <p className="mb-4 text-muted-foreground">{entry.description}</p>
-      )}
 
       {/* Changes list */}
       <ul className="space-y-2.5">
-        {entry.changes.map((change, idx) => (
-          <li key={idx} className="flex items-start gap-3">
+        {entry.changes.map((change) => (
+          <li key={change.id} className="flex items-start gap-3">
             <ChangeTypeBadge type={change.type} />
-            <span className="flex-1 pt-0.5 text-sm leading-relaxed">{change.text}</span>
+            <div className="flex-1 pt-0.5">
+              <span className="text-sm font-medium leading-relaxed">{change.text}</span>
+              {change.product && (
+                <span className="ml-2 inline-flex items-center rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                  {change.product}
+                </span>
+              )}
+            </div>
           </li>
         ))}
       </ul>
+    </div>
+  )
+}
+
+function EmptyChangelog() {
+  return (
+    <div className="mx-auto max-w-3xl rounded-lg border border-dashed border-border bg-card/50 p-12 text-center">
+      <FileText className="mx-auto mb-4 h-12 w-12 text-muted-foreground/40" />
+      <h2 className="mb-2 text-lg font-semibold">No changelog entries yet</h2>
+      <p className="text-sm text-muted-foreground">
+        Completed tasks will automatically appear here as changelog entries.
+        Mark a task as done to generate the first entry.
+      </p>
     </div>
   )
 }
@@ -165,6 +147,31 @@ function ChangelogEntryCard({ entry }: { entry: ChangelogEntry }) {
 export function ChangelogPage() {
   const { user } = useAuthContext()
   const location = useLocation()
+  const [entries, setEntries] = useState<ChangelogEntry[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    async function fetchChangelog() {
+      try {
+        setLoading(true)
+        setError(null)
+        const data = await api.get<ChangelogResponse>('/changelog')
+        if (!cancelled) {
+          setEntries(data.entries)
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : 'Failed to load changelog')
+        }
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    fetchChangelog()
+    return () => { cancelled = true }
+  }, [])
 
   return (
     <div className="flex h-screen flex-col bg-background">
@@ -211,12 +218,31 @@ export function ChangelogPage() {
             </p>
           </div>
 
+          {/* Loading state */}
+          {loading && (
+            <div className="mx-auto flex max-w-3xl items-center justify-center py-16">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          )}
+
+          {/* Error state */}
+          {!loading && error && (
+            <div className="mx-auto max-w-3xl rounded-lg border border-red-200 bg-red-50 p-6 text-center text-sm text-red-600 dark:border-red-900 dark:bg-red-950 dark:text-red-400">
+              {error}
+            </div>
+          )}
+
+          {/* Empty state */}
+          {!loading && !error && entries.length === 0 && <EmptyChangelog />}
+
           {/* Changelog entries */}
-          <div className="mx-auto max-w-3xl space-y-8">
-            {CHANGELOG_ENTRIES.map((entry, idx) => (
-              <ChangelogEntryCard key={idx} entry={entry} />
-            ))}
-          </div>
+          {!loading && !error && entries.length > 0 && (
+            <div className="mx-auto max-w-3xl space-y-8">
+              {entries.map((entry) => (
+                <ChangelogEntryCard key={entry.week_start} entry={entry} />
+              ))}
+            </div>
+          )}
 
           {/* Footer CTA */}
           <div className="mx-auto mt-12 max-w-3xl rounded-lg border border-border bg-card/50 p-6 text-center">

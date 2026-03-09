@@ -17,5 +17,6 @@ router.use(require('../../api/@custom/goals'))
 router.use(require('../../api/@custom/tasks'))
 router.use(require('../../api/@custom/research-findings'))
 router.use(require('../../api/@custom/privacy-policy'))
+router.use(require('../../api/@custom/changelog'))
 
 module.exports = router
