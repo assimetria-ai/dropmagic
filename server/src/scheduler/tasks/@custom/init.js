@@ -8,7 +8,7 @@
 //   const { MyTask } = require('.')
 //   scheduler.registerTask(new MyTask())
 
-const { TestTask, ArchiveOldDoneTasks } = require('.')
+const { TestTask, ArchiveOldDoneTasks, RecurringTaskSpawner } = require('.')
 
 /**
  * @param {import('../@system/scheduler')} scheduler
@@ -19,6 +19,9 @@ function init(scheduler) {
   
   // Auto-archive completed tasks older than 7 days
   scheduler.registerTask(new ArchiveOldDoneTasks())
+
+  // Spawn new task instances from recurring templates (every 15 min)
+  scheduler.registerTask(new RecurringTaskSpawner())
 }
 
 module.exports = init

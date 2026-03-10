@@ -295,7 +295,8 @@ router.post('/tasks', authenticate, async (req, res, next) => {
       source,
       parent_id,
       sort_order,
-      blocked_reason
+      blocked_reason,
+      recurring_schedule
     } = req.body
     
     // Validate required fields
@@ -316,13 +317,30 @@ router.post('/tasks', authenticate, async (req, res, next) => {
       }
     }
     
+    // Validate recurring_schedule if provided
+    if (recurring_schedule) {
+      if (typeof recurring_schedule !== 'object') {
+        return res.status(400).json({ error: 'recurring_schedule must be a JSON object' })
+      }
+      if (!recurring_schedule.cron) {
+        return res.status(400).json({ error: 'recurring_schedule.cron is required (node-cron expression)' })
+      }
+      // Validate cron expression
+      const cronParser = require('cron-parser')
+      try {
+        cronParser.parseExpression(recurring_schedule.cron)
+      } catch (e) {
+        return res.status(400).json({ error: `Invalid cron expression: ${e.message}` })
+      }
+    }
+
     const task = await db.one(
       `INSERT INTO goals (
         user_id, title, description, level, status, 
         type, priority, assigned_to, assigned_by, product, source,
-        parent_id, sort_order, blocked_reason
+        parent_id, sort_order, blocked_reason, recurring_schedule
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
       RETURNING *`,
       [
         req.user.id,
@@ -338,7 +356,8 @@ router.post('/tasks', authenticate, async (req, res, next) => {
         source || null,
         parent_id || null,
         sort_order || 0,
-        blocked_reason || null
+        blocked_reason || null,
+        recurring_schedule ? JSON.stringify(recurring_schedule) : null
       ]
     )
     
@@ -372,7 +391,8 @@ router.patch('/tasks/:id', authenticate, async (req, res, next) => {
       blocked_reason,
       completion_evidence,
       evidence_type,
-      evidence_url
+      evidence_url,
+      recurring_schedule
     } = req.body
     
     // Check task exists and belongs to user
@@ -483,6 +503,27 @@ router.patch('/tasks/:id', authenticate, async (req, res, next) => {
       params.push(evidence_url)
       updates.push(`evidence_url = $${paramCount++}`)
     }
+    if (recurring_schedule !== undefined) {
+      // Allow null to clear the schedule
+      if (recurring_schedule !== null) {
+        if (typeof recurring_schedule !== 'object') {
+          return res.status(400).json({ error: 'recurring_schedule must be a JSON object or null' })
+        }
+        if (!recurring_schedule.cron) {
+          return res.status(400).json({ error: 'recurring_schedule.cron is required (node-cron expression)' })
+        }
+        const cronParser = require('cron-parser')
+        try {
+          cronParser.parseExpression(recurring_schedule.cron)
+        } catch (e) {
+          return res.status(400).json({ error: `Invalid cron expression: ${e.message}` })
+        }
+        params.push(JSON.stringify(recurring_schedule))
+      } else {
+        params.push(null)
+      }
+      updates.push(`recurring_schedule = $${paramCount++}`)
+    }
     
     if (updates.length === 0) {
       return res.json({ task: existing })
@@ -497,6 +538,54 @@ router.patch('/tasks/:id', authenticate, async (req, res, next) => {
     )
     
     res.json({ task })
+  } catch (err) {
+    next(err)
+  }
+})
+
+// GET /api/tasks/:id/recurring-instances — list spawned instances of a recurring template
+router.get('/tasks/:id/recurring-instances', authenticate, async (req, res, next) => {
+  try {
+    const { status, limit = 20, offset = 0 } = req.query
+
+    // Verify template belongs to user
+    const template = await db.oneOrNone(
+      'SELECT id, recurring_schedule FROM goals WHERE id = $1 AND user_id = $2 AND level = $3',
+      [req.params.id, req.user.id, 'task']
+    )
+    if (!template) {
+      return res.status(404).json({ error: 'Task not found' })
+    }
+    if (!template.recurring_schedule) {
+      return res.status(400).json({ error: 'Task is not a recurring template' })
+    }
+
+    let query = 'SELECT * FROM goals WHERE recurring_source_id = $1 AND user_id = $2'
+    const params = [req.params.id, req.user.id]
+    let paramCount = 3
+
+    if (status) {
+      params.push(status)
+      query += ` AND status = $${paramCount++}`
+    }
+
+    query += ' ORDER BY created_at DESC'
+    params.push(parseInt(limit))
+    query += ` LIMIT $${paramCount++}`
+    params.push(parseInt(offset))
+    query += ` OFFSET $${paramCount++}`
+
+    const instances = await db.any(query, params)
+    const total = await db.one(
+      'SELECT COUNT(*)::int AS count FROM goals WHERE recurring_source_id = $1 AND user_id = $2',
+      [req.params.id, req.user.id]
+    )
+
+    res.json({
+      template_id: template.id,
+      instances,
+      pagination: { total: total.count, limit: parseInt(limit), offset: parseInt(offset) }
+    })
   } catch (err) {
     next(err)
   }

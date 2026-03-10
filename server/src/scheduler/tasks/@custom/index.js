@@ -7,5 +7,6 @@
 
 const TestTask = require('./TestTask')
 const ArchiveOldDoneTasks = require('./ArchiveOldDoneTasks')
+const RecurringTaskSpawner = require('./RecurringTaskSpawner')
 
-module.exports = { TestTask, ArchiveOldDoneTasks }
+module.exports = { TestTask, ArchiveOldDoneTasks, RecurringTaskSpawner }
