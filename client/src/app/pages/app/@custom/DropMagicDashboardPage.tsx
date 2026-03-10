@@ -16,6 +16,10 @@ import { Header } from '../../../components/@system/Header/Header'
 import { PageLayout } from '../../../components/@system/layout/PageLayout'
 import { Button } from '../../../components/@system/ui/button'
 import { api } from '../../../lib/@system/api'
+import {
+  PipelineProgressBar,
+  getDropPipelineStages,
+} from '../../../components/@custom/PipelineProgressBar/PipelineProgressBar'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -28,6 +32,10 @@ interface Drop {
   signups: number
   shares: number
   status: DropStatus
+  description?: string | null
+  image_url?: string | null
+  launch_at?: string | null
+  announced_at?: string | null
 }
 
 interface Signup {
@@ -56,10 +64,10 @@ const MOCK_STATS: DashboardStats = {
 }
 
 const MOCK_DROPS: Drop[] = [
-  { id: 1, name: 'Air Flux Gen 2', countdown: '2d 14h 32m', signups: 843, shares: 1_920, status: 'active' },
-  { id: 2, name: 'Studio Hoodie Black', countdown: '5d 03h 11m', signups: 412, shares: 887, status: 'active' },
-  { id: 3, name: 'Limited Vinyl Box', countdown: '0d 00h 00m', signups: 319, shares: 701, status: 'ended' },
-  { id: 4, name: 'Summer Capsule', countdown: '—', signups: 0, shares: 0, status: 'draft' },
+  { id: 1, name: 'Air Flux Gen 2', countdown: '2d 14h 32m', signups: 843, shares: 1_920, status: 'active', description: 'Next-gen running shoes', image_url: '/img/airflux.jpg', launch_at: '2026-03-10T18:00:00Z', announced_at: null },
+  { id: 2, name: 'Studio Hoodie Black', countdown: '5d 03h 11m', signups: 412, shares: 887, status: 'active', description: 'Premium heavyweight hoodie', image_url: '/img/hoodie.jpg', launch_at: '2026-03-15T12:00:00Z', announced_at: null },
+  { id: 3, name: 'Limited Vinyl Box', countdown: '0d 00h 00m', signups: 319, shares: 701, status: 'ended', description: 'Collector vinyl set', image_url: '/img/vinyl.jpg', launch_at: '2026-02-20T10:00:00Z', announced_at: '2026-02-20T10:01:00Z' },
+  { id: 4, name: 'Summer Capsule', countdown: '—', signups: 0, shares: 0, status: 'draft', description: null, image_url: null, launch_at: null, announced_at: null },
 ]
 
 const MOCK_SIGNUPS: Signup[] = [
@@ -146,6 +154,9 @@ function DropCard({ drop, onEdit }: { drop: Drop; onEdit: (id: number) => void }
             {drop.shares.toLocaleString()} shares
           </span>
         </div>
+
+        {/* Pipeline progress */}
+        <PipelineProgressBar stages={getDropPipelineStages(drop)} className="pt-1" />
 
         <div className="flex gap-2 pt-1">
           <Button
