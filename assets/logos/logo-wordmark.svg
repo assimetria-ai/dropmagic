@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 56" width="300" height="56">
+  <!-- DropMagic wordmark — mark + text for light backgrounds -->
+
+  <!-- Mark: diamond centered at (28, 28) in a 56×56 area -->
+  <rect x="8" y="8" width="40" height="40" rx="6"
+        transform="rotate(45 28 28)" fill="#F59E0B"/>
+
+  <!-- 4-pointed star at center (28, 28), outer R=14, inner R=5.3 -->
+  <path d="M 28 14 L 31.7 24.3 L 42 28 L 31.7 31.7 L 28 42 L 24.3 31.7 L 14 28 L 24.3 24.3 Z"
+        fill="white"/>
+
+  <!-- "DropMagic" text in dark color -->
+  <text x="66" y="37"
+        font-family="Inter, -apple-system, BlinkMacSystemFont, sans-serif"
+        font-size="24" font-weight="700" letter-spacing="-0.5"
+        fill="#111827">DropMagic</text>
+</svg>

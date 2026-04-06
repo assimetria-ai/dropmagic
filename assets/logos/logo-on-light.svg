@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- DropMagic mark — optimized for light backgrounds -->
+
+  <!-- Diamond in brand amber -->
+  <rect x="116" y="116" width="280" height="280" rx="40"
+        transform="rotate(45 256 256)" fill="#F59E0B"/>
+
+  <!-- 4-pointed magic star in white — white is still visible on amber diamond -->
+  <path d="M 256 156 L 283 229 L 356 256 L 283 283 L 256 356 L 229 283 L 156 256 L 229 229 Z"
+        fill="white"/>
+</svg>
